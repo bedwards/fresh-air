@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Visualization suite for transformer interpretability metrics.
 
-This module generates interactive visualizations using Altair for the essay
-and analysis of ABC notation music files.
+This module generates interactive visualizations using Altair and BertViz for
+the essay and analysis of ABC notation music files.
 
 Visualization types:
     - Perplexity comparison bar charts
@@ -11,11 +11,22 @@ Visualization types:
     - Layer activation trajectories
     - Genre clustering (PCA)
     - Comparative distributions
+    - BertViz head view (attention flow between tokens)
+    - BertViz model view (bird's eye attention patterns)
+
+BertViz Attention Visualizations:
+    When --include-bertviz is specified, the module generates:
+    - attention_head.html: Interactive head view showing attention flow
+    - attention_model.html: Bird's eye view of attention across all layers/heads
+
+    If full attention weights are not available in the metrics JSON,
+    falls back to an Altair-based interactive attention heatmap.
 
 Usage:
     python src/visualizations.py data/metrics/
     python src/visualizations.py data/metrics/ --output docs/visualizations/
     python src/visualizations.py --piece traditional_001 data/metrics/
+    python src/visualizations.py data/metrics/ --include-bertviz
 """
 
 import argparse
@@ -26,8 +37,18 @@ from typing import Any
 import altair as alt
 import polars as pl
 import numpy as np
+import torch
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+
+# BertViz imports - may fail in environments without IPython
+try:
+    from bertviz import head_view as bertviz_head_view
+    from bertviz import model_view as bertviz_model_view
+    BERTVIZ_AVAILABLE = True
+except ImportError:
+    BERTVIZ_AVAILABLE = False
+    print("Warning: BertViz not available. Attention visualizations will use fallback.")
 
 # Configure Altair for self-contained HTML output
 alt.data_transformers.disable_max_rows()
@@ -382,6 +403,383 @@ def layer_activation_trajectory(norms: list[float], title: str) -> alt.Chart:
     return chart
 
 
+# =============================================================================
+# BertViz Attention Visualizations
+# =============================================================================
+
+
+def prepare_attention_for_bertviz(
+    attention_weights: list[list[list[list[float]]]] | None,
+    num_layers: int | None = None,
+    num_heads: int | None = None,
+    seq_len: int | None = None
+) -> tuple[torch.Tensor, ...] | None:
+    """Convert attention weights from metrics JSON format to BertViz format.
+
+    BertViz expects attention as a tuple of tensors, one per layer,
+    each with shape (batch_size=1, num_heads, seq_len, seq_len).
+
+    The metrics JSON may store attention in different formats:
+    - Full attention weights: [layer][head][from_token][to_token]
+    - Per-head entropy only: [layer][head] (scalar per head)
+
+    Args:
+        attention_weights: 4D list of attention weights or None
+        num_layers: Expected number of layers (for validation)
+        num_heads: Expected number of heads (for validation)
+        seq_len: Expected sequence length (for validation)
+
+    Returns:
+        Tuple of tensors suitable for BertViz, or None if data unavailable/invalid
+    """
+    if attention_weights is None:
+        return None
+
+    if not isinstance(attention_weights, list) or len(attention_weights) == 0:
+        return None
+
+    # Check if this is full attention weights or just entropy values
+    first_layer = attention_weights[0]
+    if not isinstance(first_layer, list) or len(first_layer) == 0:
+        return None
+
+    first_head = first_layer[0]
+    if not isinstance(first_head, list):
+        # This is per-head entropy, not full attention weights
+        return None
+
+    # We have full attention weights
+    try:
+        attention_tuple = tuple(
+            torch.tensor(layer_attention).unsqueeze(0)  # Add batch dimension
+            for layer_attention in attention_weights
+        )
+        return attention_tuple
+    except (ValueError, TypeError) as e:
+        print(f"Warning: Could not convert attention weights to tensors: {e}")
+        return None
+
+
+def generate_bertviz_head_view(
+    attention: tuple[torch.Tensor, ...],
+    tokens: list[str],
+    output_path: Path,
+    layer: int | None = None,
+    heads: list[int] | None = None
+) -> bool:
+    """Generate BertViz head view as standalone HTML.
+
+    The head view shows attention patterns for individual attention heads,
+    with lines connecting tokens weighted by attention strength.
+
+    Args:
+        attention: Tuple of attention tensors, one per layer.
+                   Each tensor has shape (1, num_heads, seq_len, seq_len)
+        tokens: List of token strings
+        output_path: Path to save HTML file
+        layer: Optional specific layer to show (default: interactive selector)
+        heads: Optional list of specific heads to show
+
+    Returns:
+        True if successful, False otherwise
+    """
+    if not BERTVIZ_AVAILABLE:
+        print(f"  Skipping BertViz head view (BertViz not available)")
+        return False
+
+    try:
+        # Generate head view HTML
+        html_obj = bertviz_head_view(
+            attention=attention,
+            tokens=tokens,
+            layer=layer,
+            heads=heads,
+            html_action='return'
+        )
+
+        # Extract HTML string from IPython HTML object
+        html_content = html_obj.data
+
+        # Wrap in complete HTML document for standalone viewing
+        full_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BertViz Head View - Attention Patterns</title>
+    <style>
+        body {{
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 20px;
+            background-color: #fafafa;
+        }}
+        h1 {{
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }}
+        .bertviz-container {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+    </style>
+</head>
+<body>
+    <h1>Attention Head View</h1>
+    <div class="bertviz-container">
+        {html_content}
+    </div>
+</body>
+</html>"""
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(full_html)
+        print(f"  Saved: {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"  Warning: Could not generate BertViz head view: {e}")
+        return False
+
+
+def generate_bertviz_model_view(
+    attention: tuple[torch.Tensor, ...],
+    tokens: list[str],
+    output_path: Path,
+    display_mode: str = 'dark',
+    include_layers: list[int] | None = None,
+    include_heads: list[int] | None = None
+) -> bool:
+    """Generate BertViz model view as standalone HTML.
+
+    The model view provides a bird's eye view of attention patterns
+    across all layers and heads, showing how information flows through
+    the transformer.
+
+    Args:
+        attention: Tuple of attention tensors, one per layer.
+                   Each tensor has shape (1, num_heads, seq_len, seq_len)
+        tokens: List of token strings
+        output_path: Path to save HTML file
+        display_mode: 'dark' or 'light' theme
+        include_layers: Optional list of specific layers to include
+        include_heads: Optional list of specific heads to include
+
+    Returns:
+        True if successful, False otherwise
+    """
+    if not BERTVIZ_AVAILABLE:
+        print(f"  Skipping BertViz model view (BertViz not available)")
+        return False
+
+    try:
+        # Generate model view HTML
+        html_obj = bertviz_model_view(
+            attention=attention,
+            tokens=tokens,
+            display_mode=display_mode,
+            include_layers=include_layers,
+            include_heads=include_heads,
+            html_action='return'
+        )
+
+        # Extract HTML string from IPython HTML object
+        html_content = html_obj.data
+
+        # Wrap in complete HTML document for standalone viewing
+        full_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BertViz Model View - Attention Overview</title>
+    <style>
+        body {{
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 20px;
+            background-color: {'#1a1a1a' if display_mode == 'dark' else '#fafafa'};
+            color: {'#fff' if display_mode == 'dark' else '#333'};
+        }}
+        h1 {{
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }}
+        .bertviz-container {{
+            background: {'#2d2d2d' if display_mode == 'dark' else 'white'};
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            overflow-x: auto;
+        }}
+    </style>
+</head>
+<body>
+    <h1>Attention Model View</h1>
+    <div class="bertviz-container">
+        {html_content}
+    </div>
+</body>
+</html>"""
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(full_html)
+        print(f"  Saved: {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"  Warning: Could not generate BertViz model view: {e}")
+        return False
+
+
+def attention_heatmap_interactive(
+    attention_weights: list[list[float]],
+    tokens: list[str],
+    title: str,
+    layer: int = 0,
+    head: int = 0
+) -> alt.Chart:
+    """Create interactive Altair attention heatmap as BertViz fallback.
+
+    This provides a fallback visualization when BertViz is unavailable
+    or when full attention weights aren't present. Shows attention
+    pattern for a single layer/head combination.
+
+    Features:
+        - Interactive tooltips showing attention values
+        - Token labels on both axes
+        - Viridis color scale for accessibility
+        - Highlights strong attention connections
+
+    Args:
+        attention_weights: 2D list [from_token][to_token] of attention values
+        tokens: List of token strings
+        title: Title for the chart
+        layer: Layer index (for title display)
+        head: Head index (for title display)
+
+    Returns:
+        Altair Chart object
+    """
+    if not attention_weights or not tokens:
+        return alt.Chart(
+            pl.DataFrame({"x": [0], "y": [0], "text": ["No attention data"]}).to_pandas()
+        ).mark_text().encode(
+            text='text:N'
+        ).properties(title=f'Attention Heatmap: {title} (No Data)')
+
+    # Create records for heatmap
+    records = []
+    seq_len = min(len(attention_weights), len(tokens))
+
+    for from_idx in range(seq_len):
+        for to_idx in range(min(len(attention_weights[from_idx]), seq_len)):
+            records.append({
+                "from_token": tokens[from_idx],
+                "to_token": tokens[to_idx],
+                "from_idx": from_idx,
+                "to_idx": to_idx,
+                "attention": attention_weights[from_idx][to_idx]
+            })
+
+    df = pl.DataFrame(records)
+
+    # Create heatmap
+    chart = alt.Chart(df.to_pandas()).mark_rect().encode(
+        x=alt.X(
+            'to_idx:O',
+            title='To Token',
+            axis=alt.Axis(
+                labelExpr="datum.label",
+                labelAngle=-45,
+                values=list(range(seq_len))
+            )
+        ),
+        y=alt.Y(
+            'from_idx:O',
+            title='From Token',
+            sort='descending',
+            axis=alt.Axis(
+                labelExpr="datum.label",
+                values=list(range(seq_len))
+            )
+        ),
+        color=alt.Color(
+            'attention:Q',
+            scale=alt.Scale(scheme='viridis'),
+            title='Attention',
+            legend=alt.Legend(orient='right')
+        ),
+        tooltip=[
+            alt.Tooltip('from_token:N', title='From'),
+            alt.Tooltip('to_token:N', title='To'),
+            alt.Tooltip('attention:Q', title='Attention', format='.4f')
+        ]
+    ).properties(
+        title=f'{title} - Layer {layer}, Head {head}',
+        width='container',
+        height=500
+    ).configure_title(
+        fontSize=16,
+        anchor='start'
+    ).interactive()
+
+    return chart
+
+
+def generate_attention_heatmap_fallback(
+    attention_data: dict,
+    tokens: list[str],
+    output_path: Path,
+    title: str
+) -> bool:
+    """Generate fallback attention heatmap when BertViz is unavailable.
+
+    Creates individual heatmap visualizations for each layer/head
+    combination, or a summary heatmap if only entropy data is available.
+
+    Args:
+        attention_data: Attention data from metrics JSON
+        tokens: List of token strings
+        output_path: Path to save HTML file
+        title: Title for the visualization
+
+    Returns:
+        True if successful, False otherwise
+    """
+    # Check if we have full attention weights
+    attention_weights = attention_data.get("attention_weights")
+
+    if attention_weights and isinstance(attention_weights, list):
+        # Full attention weights available - use first layer, first head
+        if (len(attention_weights) > 0 and
+            isinstance(attention_weights[0], list) and
+            len(attention_weights[0]) > 0 and
+            isinstance(attention_weights[0][0], list)):
+
+            first_head_attention = attention_weights[0][0]
+            chart = attention_heatmap_interactive(
+                first_head_attention,
+                tokens,
+                title,
+                layer=0,
+                head=0
+            )
+            save_chart(chart, output_path)
+            return True
+
+    # Fall back to entropy heatmap if we have per-head entropy
+    per_head_entropy = attention_data.get("per_head")
+    if per_head_entropy:
+        chart = attention_entropy_heatmap(per_head_entropy, title)
+        save_chart(chart, output_path)
+        return True
+
+    print(f"  No attention data available for fallback visualization")
+    return False
+
+
 def genre_clustering(df: pl.DataFrame) -> alt.Chart:
     """Create 2D PCA projection of metric vectors colored by genre.
 
@@ -556,17 +954,24 @@ def save_chart(chart: alt.Chart, output_path: Path) -> None:
     print(f"  Saved: {output_path}")
 
 
-def generate_piece_visualizations(metrics_path: Path, output_dir: Path) -> dict:
+def generate_piece_visualizations(
+    metrics_path: Path,
+    output_dir: Path,
+    include_bertviz: bool = False
+) -> dict:
     """Generate all visualizations for a single piece.
 
     Creates:
         - Surprisal timeline chart
         - Activation trajectory chart
         - Attention entropy heatmap (if per-head data available)
+        - BertViz head view (if include_bertviz=True and attention weights available)
+        - BertViz model view (if include_bertviz=True and attention weights available)
 
     Args:
         metrics_path: Path to the metrics JSON file
         output_dir: Base output directory
+        include_bertviz: Whether to generate BertViz attention visualizations
 
     Returns:
         Dictionary mapping chart type to output path
@@ -610,13 +1015,51 @@ def generate_piece_visualizations(metrics_path: Path, output_dir: Path) -> dict:
         save_chart(chart, path)
         generated["attention"] = str(path)
 
+    # BertViz attention visualizations (if requested)
+    if include_bertviz:
+        tokens = data.get("tokens", [])
+        attention_weights = attention_data.get("attention_weights")
+
+        if attention_weights and tokens:
+            # Try to convert attention weights to BertViz format
+            bertviz_attention = prepare_attention_for_bertviz(attention_weights)
+
+            if bertviz_attention is not None:
+                # Generate BertViz head view
+                head_view_path = piece_output / "attention_head.html"
+                if generate_bertviz_head_view(bertviz_attention, tokens, head_view_path):
+                    generated["attention_head"] = str(head_view_path)
+
+                # Generate BertViz model view
+                model_view_path = piece_output / "attention_model.html"
+                if generate_bertviz_model_view(bertviz_attention, tokens, model_view_path):
+                    generated["attention_model"] = str(model_view_path)
+            else:
+                # Fall back to Altair-based attention heatmap
+                print(f"  Full attention weights not available for {piece_name}, using fallback")
+                fallback_path = piece_output / "attention_heatmap.html"
+                if generate_attention_heatmap_fallback(attention_data, tokens, fallback_path, piece_name):
+                    generated["attention_heatmap"] = str(fallback_path)
+        elif tokens and attention_data:
+            # No full attention weights, use fallback
+            print(f"  No full attention weights for {piece_name}, using entropy heatmap fallback")
+            fallback_path = piece_output / "attention_heatmap.html"
+            if generate_attention_heatmap_fallback(attention_data, tokens, fallback_path, piece_name):
+                generated["attention_heatmap"] = str(fallback_path)
+        else:
+            print(f"  Skipping BertViz for {piece_name}: no attention data or tokens available")
+
     if generated:
         print(f"Generated {len(generated)} visualization(s) for: {piece_name}")
 
     return generated
 
 
-def generate_corpus_visualizations(metrics_dir: Path, output_dir: Path) -> dict:
+def generate_corpus_visualizations(
+    metrics_dir: Path,
+    output_dir: Path,
+    include_bertviz: bool = False
+) -> dict:
     """Generate all corpus-level visualizations.
 
     Creates:
@@ -630,6 +1073,7 @@ def generate_corpus_visualizations(metrics_dir: Path, output_dir: Path) -> dict:
     Args:
         metrics_dir: Directory containing metrics JSON files
         output_dir: Directory to save visualizations
+        include_bertviz: Whether to generate BertViz attention visualizations
 
     Returns:
         Manifest dictionary of all generated files
@@ -678,12 +1122,17 @@ def generate_corpus_visualizations(metrics_dir: Path, output_dir: Path) -> dict:
 
     # Generate per-piece visualizations
     print("\nGenerating per-piece visualizations...")
+    if include_bertviz:
+        print("  (including BertViz attention visualizations)")
+
     for metrics_path in sorted(metrics_dir.glob("*.json")):
         # Skip non-metrics files
         if metrics_path.name in ["manifest.json", "interpretations.json"]:
             continue
 
-        piece_files = generate_piece_visualizations(metrics_path, output_dir)
+        piece_files = generate_piece_visualizations(
+            metrics_path, output_dir, include_bertviz=include_bertviz
+        )
         if piece_files:
             piece_name = metrics_path.stem.replace(".abc", "")
             manifest["pieces"][piece_name] = list(piece_files.keys())
@@ -701,6 +1150,9 @@ def create_manifest(output_dir: Path, manifest_data: dict | None = None) -> None
         output_dir: Visualizations directory
         manifest_data: Pre-computed manifest (if None, scans directory)
     """
+    # Ensure output directory exists
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     if manifest_data is None:
         manifest_data = {"pieces": {}, "corpus": []}
 
@@ -736,6 +1188,9 @@ Examples:
 
     # Generate for a single piece
     python src/visualizations.py data/metrics/ --piece traditional_001
+
+    # Include BertViz attention visualizations
+    python src/visualizations.py data/metrics/ --include-bertviz
         """
     )
     parser.add_argument(
@@ -753,6 +1208,11 @@ Examples:
         "--piece",
         help="Generate visualizations for a specific piece only"
     )
+    parser.add_argument(
+        "--include-bertviz",
+        action="store_true",
+        help="Generate BertViz attention visualizations (head view and model view)"
+    )
 
     args = parser.parse_args()
 
@@ -764,6 +1224,10 @@ Examples:
     print(f"==================")
     print(f"Metrics: {args.metrics_dir}")
     print(f"Output:  {args.output}")
+    if args.include_bertviz:
+        print(f"BertViz: enabled")
+        if not BERTVIZ_AVAILABLE:
+            print("  Warning: BertViz not available, will use fallback visualizations")
 
     if args.piece:
         # Generate for single piece
@@ -773,14 +1237,18 @@ Examples:
             metrics_path = args.metrics_dir / f"{args.piece}.json"
 
         if metrics_path.exists():
-            generate_piece_visualizations(metrics_path, args.output)
+            generate_piece_visualizations(
+                metrics_path, args.output, include_bertviz=args.include_bertviz
+            )
             create_manifest(args.output)
         else:
             print(f"Error: Metrics file not found: {metrics_path}")
             return 1
     else:
         # Generate all visualizations
-        manifest = generate_corpus_visualizations(args.metrics_dir, args.output)
+        manifest = generate_corpus_visualizations(
+            args.metrics_dir, args.output, include_bertviz=args.include_bertviz
+        )
         create_manifest(args.output, manifest)
 
     print("\nDone!")
