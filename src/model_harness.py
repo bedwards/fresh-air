@@ -469,16 +469,29 @@ def compute_attention_entropy(attentions: tuple) -> AttentionMetrics:
             # Get attention weights for this head
             head_attn = attn[head_idx]  # (seq_len, seq_len)
 
+            # Handle NaN values in attention weights
+            if torch.isnan(head_attn).any():
+                head_attn = torch.nan_to_num(head_attn, nan=eps)
+
             # Compute entropy for each query position, then average
-            # Clamp to avoid log(0)
-            head_attn_clamped = torch.clamp(head_attn, min=eps)
+            # Clamp to avoid log(0) and handle edge cases
+            head_attn_clamped = torch.clamp(head_attn, min=eps, max=1.0)
+            # Renormalize to ensure it sums to 1 after clamping
+            head_attn_normalized = head_attn_clamped / head_attn_clamped.sum(dim=-1, keepdim=True).clamp(min=eps)
+
             entropy_per_position = -torch.sum(
-                head_attn_clamped * torch.log(head_attn_clamped),
+                head_attn_normalized * torch.log(head_attn_normalized.clamp(min=eps)),
                 dim=-1
             )  # (seq_len,)
 
-            # Convert to bits and average over positions
+            # Handle any remaining NaN values and convert to bits
+            entropy_per_position = torch.nan_to_num(entropy_per_position, nan=0.0)
             mean_entropy = (entropy_per_position.mean().item() / math.log(2))
+
+            # Final NaN check
+            if math.isnan(mean_entropy):
+                mean_entropy = 0.0
+
             layer_head_entropies.append(round(mean_entropy, 4))
             all_entropies.append(mean_entropy)
 

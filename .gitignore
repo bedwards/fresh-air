@@ -1,3 +1,6 @@
+# Worker monitoring (local state)
+.workers/
+
 # Generated visualizations (can be regenerated from metrics)
 docs/visualizations/
 
