@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Language of Music: A Holistic Guide to Musical Concepts</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #333;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+            --border-color: #e1e1e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.9;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            color: var(--primary-color);
+            margin-top: 3rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+        }
+
+        .metadata {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 2rem;
+            padding: 1.2rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .metadata span {
+            display: inline-block;
+            margin: 0 1rem 0.3rem 0;
+        }
+
+        .figure {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .figure-caption {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        .concept-box {
+            background-color: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid var(--secondary-color);
+            margin: 1.5rem 0;
+            font-size: 1rem;
+        }
+
+        .concept-box h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        .abc-example {
+            background-color: #1a1a2e;
+            color: #7fdbca;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .back-link {
+            margin-bottom: 2rem;
+        }
+
+        .back-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .section-break {
+            text-align: center;
+            margin: 3rem 0;
+            color: #ccc;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .metadata span {
+                display: block;
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-link">
+        <a href="index.html">&larr; Back to Essays</a>
+    </div>
+
+    <header>
+        <h1>The Language of Music: A Holistic Guide to Musical Concepts</h1>
+        <div class="metadata">
+            <span><strong>Author:</strong> Brian Edwards</span>
+            <span><strong>Date:</strong> January 21, 2026</span>
+            <span><strong>Reading Time:</strong> 35 minutes</span>
+            <br>
+            <span><strong>Series:</strong> Musical Transformer Interpretability</span>
+        </div>
+    </header>
+
+    <main>
+        <h2>Introduction: Why Musical Theory Matters for Machine Learning</h2>
+        <p>
+        To understand how machines process music, we must first understand how music itself is structured. Music is not arbitrary noise shaped into pleasing sounds—it is a sophisticated language with grammar, syntax, and semantics. Notes combine into melodies according to rules. Harmonies follow progressions with predictable patterns. Rhythms organize time into hierarchical structures. When we analyze how a transformer model processes ABC notation, we are really asking: which aspects of this musical language has the model learned, and which remain opaque to statistical pattern matching?
+        </p>
+
+        <p>
+        This essay provides a comprehensive foundation in musical concepts, from the fundamentals of pitch and rhythm to the sophisticated rules of voice leading that separate competent music from poor composition. Each concept connects to our experimental findings—when we say the model struggles with "parallel fifths" or "chromatic modulation," readers should understand what these terms mean and why they matter musically.
+        </p>
+
+        <p>
+        We proceed from simple to complex: beginning with how music is represented in text, through the building blocks of melody and harmony, into the organizational structures of rhythm and form, and finally to the craft principles that distinguish good music from bad. By the end, readers will possess the vocabulary and conceptual framework necessary to interpret our interpretability research in its full musical context.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/folk_tradition.png" alt="Folk music tradition">
+            <p class="figure-caption">Figure 1: Music is a living tradition passed between generations—understanding its structures helps us understand what machines can and cannot learn from musical text.</p>
+        </div>
+
+        <h2>Part I: Representing Music as Text</h2>
+
+        <h3>ABC Notation: Music in Letters</h3>
+        <p>
+        Before we can analyze how language models process music, we need a way to represent music as text. ABC notation provides exactly this: a compact, human-readable format where musical pitches are represented by letters (A through G), durations by numbers, and various musical features by special characters. Developed in the 1980s for sharing folk tunes via email, ABC notation has become a standard format in the folk music community and appears throughout the internet in archives, academic databases, and enthusiast websites.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/abc_notation.png" alt="ABC notation basics">
+            <p class="figure-caption">Figure 2: ABC notation represents music as text—note names as letters, durations as numbers, creating a format that language models can process.</p>
+        </div>
+
+        <p>
+        Consider a simple example. The opening of "Twinkle Twinkle Little Star" in ABC notation:
+        </p>
+
+        <div class="abc-example">
+X:1<br>
+T:Twinkle Twinkle Little Star<br>
+M:4/4<br>
+L:1/4<br>
+K:C<br>
+C C G G | A A G2 | F F E E | D D C2 |
+        </div>
+
+        <p>
+        The header lines specify metadata: X is a reference number, T is the title, M is the meter (4/4 time), L is the default note length (quarter notes), and K is the key (C major). The melody follows: C C G G means four quarter notes on C, C, G, G. The vertical bars mark measure boundaries. G2 means G held for twice the default length (a half note). This compact representation captures the essential musical information while remaining readable to both humans and machines.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/staff_vs_abc.png" alt="Staff notation versus ABC">
+            <p class="figure-caption">Figure 3: Traditional staff notation and ABC notation represent the same musical information in different formats—one visual, one textual.</p>
+        </div>
+
+        <div class="concept-box">
+            <h4>Key Insight: Why ABC Matters for AI Research</h4>
+            <p>ABC notation transforms music into a sequence of tokens—exactly the format language models are designed to process. By analyzing model behavior on ABC notation, we can study whether statistical pattern matching captures genuine musical structure or merely surface regularities in the character sequences.</p>
+        </div>
+
+        <h2>Part II: The Building Blocks of Melody</h2>
+
+        <h3>Pitch and Scales</h3>
+        <p>
+        Music begins with pitch—the perceived frequency of a sound. In Western music, the octave (a frequency ratio of 2:1) is divided into twelve equal semitones, creating the chromatic scale. From these twelve pitches, we select subsets to form scales, which provide the raw material for melody and harmony.
+        </p>
+
+        <p>
+        The major scale consists of seven pitches arranged in a specific pattern of whole steps (two semitones) and half steps (one semitone): W-W-H-W-W-W-H. Starting from C, this yields C-D-E-F-G-A-B-C. The major scale sounds bright and resolved—it is the "do re mi" most people learn as children. The minor scale modifies this pattern to W-H-W-W-H-W-W, yielding C-D-Eb-F-G-Ab-Bb-C when starting from C. The minor scale sounds darker, often described as sad or introspective.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/scales_major_minor.png" alt="Major and minor scales">
+            <p class="figure-caption">Figure 4: The major scale (bright, resolved) and minor scale (darker, more complex) differ in their arrangement of whole and half steps.</p>
+        </div>
+
+        <p>
+        Scales establish a tonal center—a home pitch around which the music orbits. Notes within the scale (diatonic notes) sound stable and expected. Notes outside the scale (chromatic notes) create tension and surprise. This is precisely what our experiments measure: when the model encounters chromatic notes, surprisal increases because these pitches violate the statistical expectations established by the key signature.
+        </p>
+
+        <h3>Melodic Contour and Motion</h3>
+        <p>
+        A melody is more than a sequence of pitches—it has shape. Melodic contour describes the overall direction and movement of a melody through pitch space. A melody might ascend gradually, reach a climax, then descend back to rest. It might leap upward dramatically or proceed in smooth stepwise motion.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/melodic_contour.png" alt="Melodic contour visualization">
+            <p class="figure-caption">Figure 5: Melodic contour traces the rise and fall of a melody—the shape of musical thought through pitch space.</p>
+        </div>
+
+        <p>
+        Two types of melodic motion dominate: <em>stepwise</em> motion moves to adjacent scale degrees (C to D, E to F), creating smooth, singable lines. <em>Leaps</em> skip over intervening pitches (C to G, E to C), creating more dramatic gestures. Good melodies balance steps and leaps—too many steps become plodding, too many leaps become jagged and hard to follow.
+        </p>
+
+        <p>
+        Our model shows different surprisal patterns for steps versus leaps. Stepwise motion is highly predictable—if the melody has been ascending by steps, the model expects it to continue. Leaps produce surprisal spikes, especially leaps to chromatically altered notes. This suggests the model has learned melodic inertia: the expectation that melodies tend to continue in the direction they've been moving.
+        </p>
+
+        <div class="section-break">* * *</div>
+
+        <h2>Part III: Rhythm and Time</h2>
+
+        <h3>Duration and Note Values</h3>
+        <p>
+        Music exists in time, and rhythm organizes that time into patterns of long and short durations. Western notation divides time hierarchically: a whole note divides into two half notes, which divide into four quarter notes, which divide into eight eighth notes, and so on. Each level represents a halving of duration.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/rhythm_basics.png" alt="Rhythmic note values">
+            <p class="figure-caption">Figure 6: Note values divide time hierarchically—whole notes split into halves, halves into quarters, quarters into eighths.</p>
+        </div>
+
+        <p>
+        In ABC notation, durations attach to note letters: C2 means C held for two default units, C/2 means C for half the default unit. The L: header establishes the default. This compact representation encodes the same durational information as traditional notation, just in a different format.
+        </p>
+
+        <h3>Meter and Time Signatures</h3>
+        <p>
+        Meter groups beats into recurring patterns of strong and weak pulses. The time signature specifies this grouping: 4/4 means four quarter-note beats per measure with emphasis on beat one, 3/4 creates waltz-like groups of three, 6/8 organizes six eighth notes into two groups of three (compound duple meter).
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/time_signatures.png" alt="Time signatures compared">
+            <p class="figure-caption">Figure 7: Different time signatures create different rhythmic feels—the steady march of 4/4, the lilt of 3/4 waltz time, the bounce of 6/8.</p>
+        </div>
+
+        <p>
+        Our experiments revealed that the model maintains strong metrical expectations. Attention heads in middle layers show periodic patterns aligned with bar lines and downbeats. Even when harmonic predictions fail completely—as in avant-garde or noise categories—these rhythmic attention patterns persist. The model has learned meter as a structural scaffolding independent of pitch content.
+        </p>
+
+        <div class="concept-box">
+            <h4>The Rhythmic Foundation</h4>
+            <p>Rhythm proves more robust than harmony in model representations. In our experiments, rhythmic patterns remained predictable (low surprisal) even in pieces with unpredictable pitches. The model seems to encode rhythm and pitch through partially independent pathways—an architectural discovery with implications for how transformers process structured sequences.</p>
+        </div>
+
+        <h3>Phrase Structure</h3>
+        <p>
+        Musical phrases are the sentences of music—coherent units of musical thought that breathe and cadence together. Western folk music overwhelmingly uses regular phrase structures: four-bar phrases combine into eight-bar periods, which combine into sixteen-bar sections. This regularity creates predictability that listeners rely on unconsciously.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/phrase_structure.png" alt="Musical phrase structure">
+            <p class="figure-caption">Figure 8: Musical phrases follow architectural patterns—call-and-response, tension and release, organized into regular structures.</p>
+        </div>
+
+        <p>
+        The antecedent-consequent structure is particularly common: the first phrase poses a musical question (ending inconclusively), and the second phrase provides the answer (ending with resolution). This creates a satisfying sense of completion at the phrase level while maintaining forward motion through the piece.
+        </p>
+
+        <p>
+        Traditional folk tunes in our corpus show the lowest perplexity partly because of their regular phrase structures. The model learns to expect phrase boundaries at predictable intervals and to anticipate cadential patterns at those boundaries. When experimental pieces disrupt these expectations—with odd-length phrases or elided boundaries—perplexity rises correspondingly.
+        </p>
+
+        <div class="section-break">* * *</div>
+
+        <h2>Part IV: Harmony—The Vertical Dimension</h2>
+
+        <h3>Chords and Triads</h3>
+        <p>
+        While melody moves horizontally through time, harmony stacks pitches vertically. The triad—three notes built in thirds—forms the foundation of Western harmony. Stack C-E-G and you have a C major triad, the prototypical chord that defines the key of C major.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/harmony_triads.png" alt="Chord triads">
+            <p class="figure-caption">Figure 9: Triads stack notes in thirds—major triads sound stable and bright, minor triads more complex and nuanced.</p>
+        </div>
+
+        <p>
+        Four types of triads dominate: major (happy, resolved), minor (complex, often sad), diminished (tense, unstable), and augmented (floating, ambiguous). Each has a characteristic sound that composers deploy for emotional effect. A major chord might end a phrase with resolution; a diminished chord might create suspense before a climax.
+        </p>
+
+        <h3>Chord Progressions</h3>
+        <p>
+        Chords don't appear in isolation—they progress through time in patterns that create the sense of harmonic motion. The most fundamental progression in Western music moves from tonic (I) through subdominant (IV) and dominant (V) back to tonic (I). This I-IV-V-I progression underlies countless songs from classical symphonies to folk tunes to pop hits.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/chord_progressions.png" alt="Chord progressions">
+            <p class="figure-caption">Figure 10: Chord progressions create journeys through harmonic space—departure from home, building tension, and satisfying return.</p>
+        </div>
+
+        <p>
+        Why does this progression work? The dominant chord (V) contains the leading tone—the note just below the tonic—which creates strong pull toward resolution. The subdominant (IV) provides contrast and harmonic color before the dominant intensifies the drive home. This syntax of tension and release is so deeply embedded in Western listeners that it feels almost inevitable.
+        </p>
+
+        <p>
+        Our model has learned these common progressions well. In traditional music, chord changes show moderate surprisal—the model maintains uncertainty among several plausible chords without being totally lost. But when avant-garde pieces employ tritone substitutions or chromatic mediants (chords borrowed from distant keys), surprisal spikes dramatically. The model's harmonic vocabulary is extensive but bounded by what appears frequently in training data.
+        </p>
+
+        <h3>Diatonic Versus Chromatic Harmony</h3>
+        <p>
+        Diatonic harmony stays within the scale—using only the seven notes of the major or minor scale and the chords built from them. This creates a clear tonal center and predictable harmonic relationships. Chromatic harmony introduces notes outside the scale, borrowing from other keys or moving through all twelve pitches.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/diatonic_chromatic.png" alt="Diatonic versus chromatic">
+            <p class="figure-caption">Figure 11: Diatonic music (using scale notes) sounds stable; chromatic music (using all twelve pitches) sounds more colorful and complex.</p>
+        </div>
+
+        <p>
+        Chromaticism adds color and expressivity but increases complexity. Each chromatic note is a small surprise—a departure from the expected scale. Our experiments quantify this precisely: the mean surprisal in highly chromatic avant-garde pieces (4.05 bits) nearly doubles that in diatonic traditional pieces (2.44 bits). The model has learned to expect diatonic harmony and marks chromatic departures as unexpected.
+        </p>
+
+        <div class="section-break">* * *</div>
+
+        <h2>Part V: Voice Leading—The Craft of Connection</h2>
+
+        <h3>What Is Voice Leading?</h3>
+        <p>
+        Voice leading governs how individual melodic lines (voices) move from chord to chord. Good voice leading creates smooth, singable lines in each voice while the harmony changes beneath. Each voice should feel like a coherent melody, not just a sequence of chord tones.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/voice_leading.png" alt="Voice leading principles">
+            <p class="figure-caption">Figure 12: Good voice leading moves each voice smoothly and independently—stepwise motion, contrary motion between voices, no awkward leaps.</p>
+        </div>
+
+        <p>
+        Three principles govern classical voice leading: (1) prefer stepwise motion over leaps; (2) use contrary motion between voices (when one goes up, another goes down); and (3) resolve tendency tones appropriately (the leading tone should rise to the tonic, the seventh of a dominant chord should fall). These rules evolved over centuries of practice, encoding what musicians learned to hear as smooth and satisfying.
+        </p>
+
+        <h3>Forbidden Parallels</h3>
+        <p>
+        The most famous voice-leading rule forbids parallel perfect fifths and octaves. When two voices move in the same direction by the same interval, they temporarily fuse into a single sound, undermining the independence that makes counterpoint interesting. Parallel fifths between bass and soprano, for instance, make the texture suddenly hollow—the two outer voices collapse into one.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/parallel_fifths.png" alt="Parallel fifths illustration">
+            <p class="figure-caption">Figure 13: Parallel fifths (marked in red) are traditionally avoided because they undermine voice independence—good voice leading uses contrary motion instead.</p>
+        </div>
+
+        <p>
+        This prohibition is not absolute—many musical styles (medieval organum, power chords in rock) use parallel motion deliberately. But in the common-practice tradition that dominates our training data, parallel fifths are genuinely rare. A language model that perfectly captured the statistical distribution of music would assign them lower probability.
+        </p>
+
+        <p>
+        Yet our experiments reveal a striking finding: the model shows no particular difficulty with parallel fifths. Our "terrible music" category, which deliberately violates voice-leading rules, achieves perplexity (5.69) barely higher than traditional music (6.14). The model cannot distinguish well-crafted from poorly-crafted music when both use similar surface vocabularies. It has learned what notes tend to follow what notes, but not what notes <em>should</em> follow according to voice-leading principles.
+        </p>
+
+        <div class="concept-box">
+            <h4>The Voice-Leading Blind Spot</h4>
+            <p>This finding reveals a fundamental limitation: language models learn P(note | context) but not P(note | context, good_music). The training objective maximizes likelihood, not quality. If parallel fifths occasionally appear in training data, they receive non-negligible probability. The model cannot apply normative judgment that exists outside the statistical distribution.</p>
+        </div>
+
+        <h3>Cadences: Musical Punctuation</h3>
+        <p>
+        Cadences are the punctuation marks of music—the harmonic gestures that mark phrase endings and create varying degrees of closure. The authentic cadence (V to I) sounds final, like a period. The half cadence (ending on V) sounds incomplete, like a question mark. The plagal cadence (IV to I) sounds gentle and settled, like "Amen." The deceptive cadence (V to vi) surprises by avoiding the expected resolution.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/cadences.png" alt="Types of cadences">
+            <p class="figure-caption">Figure 14: Cadences create different degrees of closure—authentic cadences resolve completely, half cadences leave questions open, deceptive cadences surprise.</p>
+        </div>
+
+        <p>
+        Cadences occur at predictable structural positions—typically at the ends of four-bar and eight-bar phrases in folk music. The model shows interesting behavior around cadences: attention patterns in later layers become more focused as cadences approach, suggesting the model recognizes the approach of structural closure. But the specific cadence type produces variable surprisal—half cadences surprise the model more than authentic cadences, matching their relative frequency in training data.
+        </p>
+
+        <div class="section-break">* * *</div>
+
+        <h2>Part VI: Beyond the Basics</h2>
+
+        <h3>Modulation: Changing Key</h3>
+        <p>
+        Modulation is the process of shifting from one key to another within a piece. A tune might begin in C major, move to G major for the B section, then return to C. This key change provides harmonic variety and large-scale structure—a different kind of tension and release than chord progressions within a key.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/modulation.png" alt="Modulation visualization">
+            <p class="figure-caption">Figure 15: Modulation shifts the tonal center—like moving from one landscape to another, bringing new colors and perspectives.</p>
+        </div>
+
+        <p>
+        Modulation typically occurs through pivot chords—chords that function in both the old key and the new. A C major chord functions as I in C major but also as IV in G major. By reinterpreting this chord mid-phrase, the music can smoothly transition between tonal centers.
+        </p>
+
+        <p>
+        Our experiments show that modulations produce consistent surprisal spikes. Even in traditional music, moments of key change register as unexpected. The model has learned local tonal expectations well—it knows what notes belong in the current key—but struggles to anticipate when the key itself will change. This suggests that while the model has learned key-relative pitch distributions, it has weaker representations of larger-scale tonal form.
+        </p>
+
+        <h3>Ornamentation: Decorating the Melody</h3>
+        <p>
+        Irish traditional music—the primary style in our folk tune corpus—makes extensive use of ornamentation. Grace notes, rolls, cuts, and crans embellish the skeleton melody with rapid decorative figures. These ornaments are not written in the original tune but added by performers according to stylistic convention.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/ornamentation.png" alt="Musical ornaments">
+            <p class="figure-caption">Figure 16: Ornaments embellish melodies—grace notes, trills, rolls, and cuts add expressivity and stylistic authenticity to the underlying tune.</p>
+        </div>
+
+        <p>
+        Ornaments pose an interesting challenge for prediction. The skeleton melody might be completely predictable, but exactly which ornaments appear and where is a matter of performer choice and stylistic interpretation. In our ABC corpus, some transcriptions include detailed ornamentation while others present only the bare tune.
+        </p>
+
+        <p>
+        The model treats ornaments as consistently less predictable than structural notes. Mean surprisal for ornamental tokens exceeds that for melodic skeleton by approximately one bit. This makes musical sense: ornaments are optional variations on a more determined underlying structure. The model has learned that ornaments are contextually possible without learning the specific rules that govern their placement.
+        </p>
+
+        <h3>Polyrhythm and Complex Meter</h3>
+        <p>
+        Polyrhythm occurs when different voices follow different metric patterns simultaneously. The simplest example is three against two: one voice plays three evenly-spaced notes while another plays two, creating a complex interlocking pattern. More elaborate polyrhythms—five against four, seven against three—produce patterns that only align after long cycles.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/polyrhythm.png" alt="Polyrhythm visualization">
+            <p class="figure-caption">Figure 17: Polyrhythm layers different metric patterns—three against two, five against three—creating intricate, interlocking textures.</p>
+        </div>
+
+        <p>
+        Our experimental category includes pieces with complex polymetric structures. The model's response is fascinating: attention entropy drops to its lowest levels (0.0050 bits), indicating extremely focused attention on immediate context. When faced with polymetric complexity, the model retreats from attempting to track multiple metric streams and instead focuses narrowly on local token-to-token prediction.
+        </p>
+
+        <p>
+        This adaptive strategy is musically sensible but represents a processing mode qualitatively different from how the model handles simple meter. The model has learned when to narrow its attention window—a form of uncertainty handling that suggests sophisticated processing even when prediction fails.
+        </p>
+
+        <h3>Musical Form: Large-Scale Structure</h3>
+        <p>
+        Beyond phrases and periods, music organizes into larger formal structures. Binary form (AB) presents two contrasting sections. Ternary form (ABA) departs and returns. Rondo (ABACA) alternates a recurring theme with contrasting episodes. Sonata form elaborates themes through exposition, development, and recapitulation.
+        </p>
+
+        <div class="figure">
+            <img src="images/music_concepts/musical_form.png" alt="Musical form diagrams">
+            <p class="figure-caption">Figure 18: Musical forms organize sections into large-scale structures—binary contrasts, ternary returns, rondo's recurring refrain.</p>
+        </div>
+
+        <p>
+        Irish traditional music typically uses binary form with repeats: an A section (often eight bars, repeated), followed by a B section (also eight bars, repeated). This AABB structure appears consistently in jigs, reels, and hornpipes. The model shows signs of learning this structure—repeat markers show low surprisal, and the transition from A to B section is less surprising than random structural points.
+        </p>
+
+        <p>
+        However, the model's sense of form remains relatively local. It does not appear to maintain strong expectations about entire sections based on earlier material. The recapitulation of a theme after developmental passages shows similar surprisal to its first appearance, suggesting the model does not track musical material across long spans the way human listeners do.
+        </p>
+
+        <div class="section-break">* * *</div>
+
+        <h2>Synthesis: What the Model Has and Hasn't Learned</h2>
+
+        <p>
+        Having surveyed the major concepts of musical theory, we can now characterize the model's musical knowledge with precision:
+        </p>
+
+        <h3>Robust Representations</h3>
+        <ul>
+            <li><strong>Meter and rhythm:</strong> The model maintains strong metrical expectations that persist even when harmonic processing fails. Downbeats, bar lines, and phrase boundaries are tracked reliably.</li>
+            <li><strong>Local harmonic syntax:</strong> Common chord progressions and key-relative pitch expectations are well-learned. The model knows what notes belong in a key and roughly which chord tones follow which.</li>
+            <li><strong>ABC notation syntax:</strong> Headers, bar lines, duration markers, and other notational elements are predicted with high confidence. The format itself is thoroughly learned.</li>
+            <li><strong>Phrase-level structure:</strong> Regular four- and eight-bar phrases show predictable patterns of tension and release approaching cadences.</li>
+        </ul>
+
+        <h3>Partial Representations</h3>
+        <ul>
+            <li><strong>Melodic contour:</strong> The model has learned melodic inertia (the tendency of melodies to continue their direction) but struggles with larger-scale melodic arcs.</li>
+            <li><strong>Ornamentation:</strong> Ornaments are recognized as possible but their specific placement remains unpredictable.</li>
+            <li><strong>Modulation:</strong> Key changes are marked as surprising rather than anticipated, though the model adapts to new keys after they establish.</li>
+        </ul>
+
+        <h3>Absent Representations</h3>
+        <ul>
+            <li><strong>Voice-leading quality:</strong> The model cannot distinguish good voice leading from bad. Parallel fifths and proper contrary motion receive similar treatment.</li>
+            <li><strong>Long-range form:</strong> Thematic recurrence across long spans is not tracked. The model processes locally without strong global structure.</li>
+            <li><strong>Normative judgment:</strong> The model knows what is statistically common but not what is musically good. Quality cannot be inferred from frequency.</li>
+        </ul>
+
+        <h2>Conclusion: Musical Knowledge as Statistical Competence</h2>
+
+        <p>
+        Understanding these musical concepts illuminates both the achievements and limitations of statistical language modeling applied to music. The model has achieved impressive statistical competence—it has learned the probability distributions that characterize musical text with sufficient accuracy to make reasonable predictions. Its representations of meter, local harmony, and notation syntax rival what we might expect from a first-year music student.
+        </p>
+
+        <p>
+        But statistical competence is not musical understanding. The model cannot hear the hollow sound of parallel fifths, cannot feel the surprise of a deceptive cadence resolved into something unexpected, cannot recognize the satisfaction of a well-crafted voice-leading line. These are normative judgments that exist outside the training distribution—they require understanding what music <em>should</em> do, not just what it <em>does</em>.
+        </p>
+
+        <blockquote>
+        "The model knows what notes tend to follow what notes. It does not know what makes music music."
+        </blockquote>
+
+        <p>
+        This conclusion should not diminish the genuine achievement. Learning as much about musical structure as these models have, purely from exposure to text, is remarkable. The hierarchical attention patterns tracking meter at different scales, the adaptive narrowing under polymetric complexity, the maintained rhythmic representations when harmonic processing fails—these are sophisticated behaviors that emerge without explicit musical training.
+        </p>
+
+        <p>
+        For those seeking to use language models for musical applications, the implications are clear: trust the model for format compliance, local coherence, and stylistic imitation. Verify manually for voice-leading quality, long-range structural integrity, and overall aesthetic judgment. The statistical competence is real and useful; the limitations are equally real and must be respected.
+        </p>
+
+        <p>
+        Music, in the end, remains a human art. Machines can process its textual representations with increasing sophistication, but the judgment of what makes music beautiful, moving, or transcendent lies outside the reach of pattern matching. Understanding the musical concepts in this essay helps us see both how far statistical modeling has come and how far it has yet to go.
+        </p>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="index.html">Musical Transformer Interpretability</a> research series.</p>
+        <p>Built with Claude Code (Claude Opus 4.5)</p>
+    </footer>
+</body>
+</html>
