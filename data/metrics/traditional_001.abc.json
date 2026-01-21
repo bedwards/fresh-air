@@ -1,7 +1,7 @@
 {
   "filename": "traditional_001.abc",
   "model": "microsoft/phi-4",
-  "timestamp": "2026-01-21T10:17:46.168675",
+  "timestamp": "2026-01-21T11:03:50.411386",
   "token_count": 164,
   "perplexity": {
     "overall": 10.4664,
