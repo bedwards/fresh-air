@@ -32,6 +32,7 @@ networkx==3.6.1
 numba==0.63.1
 numpy==2.3.5
 packaging==25.0
+pandas==2.3.3
 parso==0.8.5
 pexpect==4.9.0
 polars==1.37.1
@@ -39,9 +40,11 @@ polars-runtime-32==1.37.1
 prompt_toolkit==3.0.52
 ptyprocess==0.7.0
 pure_eval==0.2.3
+pyarrow==23.0.0
 Pygments==2.19.2
 pynndescent==0.6.0
 python-dateutil==2.9.0.post0
+pytz==2025.2
 PyYAML==6.0.3
 referencing==0.37.0
 regex==2026.1.15
@@ -63,6 +66,7 @@ tqdm==4.67.1
 traitlets==5.14.3
 transformers==4.57.6
 typing_extensions==4.15.0
+tzdata==2025.3
 umap-learn==0.5.11
 urllib3==2.6.3
 wcwidth==0.2.14
