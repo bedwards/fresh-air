@@ -302,19 +302,23 @@ class TransformersClient:
             device = self._get_device()
 
             # Load model with memory-efficient settings
+            # Note: 'torch_dtype' is deprecated in newer transformers, use 'dtype'
             model_kwargs = {
                 "trust_remote_code": True,
-                "output_attentions": True,
-                "output_hidden_states": True,
             }
 
-            # Use float16 for memory efficiency
+            # Use float16/bfloat16 for memory efficiency
             if device in ("cuda", "mps"):
-                model_kwargs["torch_dtype"] = torch.float16
+                # Try bfloat16 first (better for training stability), fall back to float16
+                try:
+                    model_kwargs["torch_dtype"] = torch.bfloat16
+                except Exception:
+                    model_kwargs["torch_dtype"] = torch.float16
+            else:
+                model_kwargs["torch_dtype"] = torch.float32
 
             # For CPU or single GPU, load directly
             if device == "cpu":
-                model_kwargs["torch_dtype"] = torch.float32
                 self.model = AutoModelForCausalLM.from_pretrained(
                     self.model_name,
                     **model_kwargs
@@ -330,11 +334,30 @@ class TransformersClient:
                 except Exception as e:
                     print(f"Warning: device_map='auto' failed: {e}")
                     print("Trying direct device placement...")
-                    del model_kwargs["device_map"]
-                    self.model = AutoModelForCausalLM.from_pretrained(
-                        self.model_name,
-                        **model_kwargs
-                    ).to(device)
+                    if "device_map" in model_kwargs:
+                        del model_kwargs["device_map"]
+                    try:
+                        self.model = AutoModelForCausalLM.from_pretrained(
+                            self.model_name,
+                            **model_kwargs
+                        ).to(device)
+                    except torch.cuda.OutOfMemoryError:
+                        print("Error: Out of memory on GPU. Trying CPU with float32...")
+                        model_kwargs["torch_dtype"] = torch.float32
+                        self.model = AutoModelForCausalLM.from_pretrained(
+                            self.model_name,
+                            **model_kwargs
+                        )
+                    except Exception as mem_error:
+                        if "out of memory" in str(mem_error).lower():
+                            print("Error: Out of memory. Trying CPU with float32...")
+                            model_kwargs["torch_dtype"] = torch.float32
+                            self.model = AutoModelForCausalLM.from_pretrained(
+                                self.model_name,
+                                **model_kwargs
+                            )
+                        else:
+                            raise
 
             self.model.eval()
             print(f"Model loaded successfully")

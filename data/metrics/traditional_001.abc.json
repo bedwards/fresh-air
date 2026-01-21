@@ -1,7 +1,7 @@
 {
   "filename": "traditional_001.abc",
   "model": "phi4:14b",
-  "timestamp": "2026-01-21T09:47:37.722925",
+  "timestamp": "2026-01-21T10:04:30.399922",
   "token_count": 70,
   "perplexity": {
     "overall": 1.5358,
@@ -86,7 +86,9 @@
     "per_layer": null,
     "per_head": null,
     "high_entropy_heads": [],
-    "note": "Attention weights not available via Ollama API. Use transformers library with output_attentions=True for direct model access to attention patterns."
+    "low_entropy_heads": [],
+    "head_specializations": null,
+    "note": "Attention weights not available via Ollama API. Use --use-transformers flag for full attention analysis."
   },
   "surprisal": {
     "mean": 0.619,
@@ -165,17 +167,15 @@
     "high_surprisal_tokens": []
   },
   "activations": {
-    "per_layer_norm": null,
-    "variance_per_layer": null,
-    "note": "Internal activations not available via Ollama API. Use transformers library with output_hidden_states=True for direct model access to layer activations."
+    "per_layer_l2_norm": null,
+    "per_layer_mean": null,
+    "per_layer_variance": null,
+    "per_layer_max": null,
+    "per_layer_min": null,
+    "embedding_norm": null,
+    "final_layer_norm": null,
+    "norm_growth_rate": null,
+    "note": "Internal activations not available via Ollama API. Use --use-transformers flag for full hidden state analysis."
   },
-  "comparative": {
-    "baseline": "traditional_mean",
-    "perplexity_zscore": -1.0721,
-    "entropy_zscore": -1.1204,
-    "surprisal_zscore": -1.1204,
-    "outlier_flags": [],
-    "classification": "syntactically_valid_semantically_coherent",
-    "interpretation": "The model processes this piece comfortably, recognizing familiar patterns. Both token sequences and structural relationships align with training data."
-  }
+  "comparative": null
 }
