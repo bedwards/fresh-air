@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Substrate Melodies: Probing Musical Understanding Through Transformer Confusion</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --text-color: #333;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+            --border-color: #e1e1e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-top: 3rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+        }
+
+        .metadata {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .metadata span {
+            display: inline-block;
+            margin-right: 1.5rem;
+        }
+
+        .audio-player {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .audio-player h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .audio-player audio {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .visualization {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .visualization iframe {
+            width: 100%;
+            min-height: 400px;
+            border: none;
+        }
+
+        .visualization-caption {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        .footnote {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .metadata span {
+                display: block;
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Substrate Melodies: Probing Musical Understanding Through Transformer Confusion</h1>
+        <div class="metadata">
+            <span><strong>Author:</strong> Brian Edwards</span>
+            <span><strong>Date:</strong> January 21, 2026</span>
+            <span><strong>Word Count:</strong> TBD</span>
+            <span><strong>Reading Time:</strong> TBD</span>
+            <br>
+            <span><strong>Contact:</strong> brian.mabry.edwards@gmail.com</span>
+            <span><strong>Model:</strong> Claude Code (Claude Opus 4.5)</span>
+        </div>
+    </header>
+
+    <main>
+        <h2>Introduction</h2>
+
+<p>
+[This section will contain 2000-3000 words exploring what it means for a language model
+to "understand" music, the collision between textual representations and musical meaning,
+and the methodology of this research.]
+</p>
+
+<p>
+The essay will explain interpretability metrics from first principles: perplexity as
+effective branching factor, attention entropy as a measure of focused vs. diffuse attention,
+and surprisal as a quantification of the unexpected.
+</p>
+
+<h2>Traditional Baseline: 'The Butterfly'</h2>
+
+<p>
+[This section will analyze a traditional Irish slip jig, establishing the baseline for
+model behavior when processing familiar musical patterns.]
+</p>
+
+<div class="audio-player">
+    <h4>The Butterfly</h4>
+    <p>Traditional Irish slip jig in E-flat major, demonstrating the model's baseline response to familiar musical patterns.</p>
+    <audio controls>
+        <source src="audio/traditional_001.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+</div>
+
+<div class="visualization">
+    <iframe src="visualizations/traditional_001/attention.html" title="Attention Heatmap"></iframe>
+    <p class="visualization-caption">Attention patterns show regular structure corresponding to the 9/8 meter.</p>
+</div>
+
+<h2>Experimental Extremes: 'Chromatic Density Study'</h2>
+
+<p>
+[This section will examine the model's response to dense chromatic writing,
+where perplexity and attention entropy spike dramatically.]
+</p>
+
+<h2>Deep Dive: Methodology and Interpretation</h2>
+
+<p>
+[This section will provide detailed technical explanations of the metrics,
+their formulas, and their interpretations, while remaining accessible to
+non-specialist readers.]
+</p>
+
+<h2>Conclusions</h2>
+
+<p>
+[This section will synthesize the findings, discuss implications for understanding
+how language models process domain-specific notation, and suggest directions for
+future research.]
+</p>
+
+    </main>
+
+    <footer>
+        <p>
+            Built with <a href="https://claude.ai/claude-code">Claude Code</a> (Claude Opus 4.5)
+        </p>
+        <p>
+            Brian Edwards<br>
+            brian.mabry.edwards@gmail.com | 512-584-6841<br>
+            Waco, Texas, USA
+        </p>
+    </footer>
+</body>
+</html>
