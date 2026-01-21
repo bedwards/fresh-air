@@ -17,6 +17,9 @@ python src/visualizations.py data/metrics/ --output docs/visualizations/
 
 # Generate for a specific piece
 python src/visualizations.py data/metrics/ --piece traditional_001
+
+# Include BertViz attention visualizations
+python src/visualizations.py data/metrics/ --output docs/visualizations/ --include-bertviz
 ```
 
 ## Visualization Types
@@ -152,6 +155,64 @@ These charts provide detailed analysis of individual pieces.
 - **Specific high-entropy layers:** May indicate where the model "decides" structure
 - **Vertical bands:** All heads in a layer agree (unusual)
 
+---
+
+### BertViz Attention Visualizations
+
+These visualizations are generated when the `--include-bertviz` flag is specified. They require full attention weight matrices in the metrics JSON (stored in `attention.attention_weights`).
+
+#### 8. BertViz Head View
+
+**File:** `{piece_name}/attention_head.html`
+
+**Purpose:** Show attention flow between tokens for individual attention heads.
+
+**Interpretation:**
+- **Lines:** Connect tokens, thickness indicates attention strength
+- **Color intensity:** Darker lines indicate stronger attention
+- **Layer selector:** Choose which layer to visualize
+- **Head selector:** Choose which attention head(s) to display
+
+**What to look for:**
+- **Strong diagonal patterns:** Self-attention (token attends to itself)
+- **Vertical lines to early tokens:** Attention to special tokens or structure markers
+- **Local attention patterns:** Token attends mainly to nearby tokens (locality)
+- **Long-range dependencies:** Attention spanning many tokens (musical structure)
+
+---
+
+#### 9. BertViz Model View
+
+**File:** `{piece_name}/attention_model.html`
+
+**Purpose:** Bird's eye view of attention patterns across all layers and heads.
+
+**Interpretation:**
+- **Grid layout:** Rows are layers, columns are heads
+- **Each cell:** Shows attention pattern for that layer/head combination
+- **Click to expand:** View detailed attention for specific layer/head
+
+**What to look for:**
+- **Layer specialization:** Different layers show different attention patterns
+- **Head specialization:** Within a layer, heads may have distinct roles
+- **Redundant heads:** Multiple heads with similar patterns
+- **Evolution through layers:** How attention changes from early to late layers
+
+---
+
+#### 10. Attention Heatmap (Fallback)
+
+**File:** `{piece_name}/attention_heatmap.html`
+
+**Purpose:** Fallback visualization when BertViz is unavailable or full attention weights are not present.
+
+**Interpretation:**
+- **X-axis:** Target tokens (where attention goes)
+- **Y-axis:** Source tokens (where attention comes from)
+- **Color scale:** Viridis (yellow = high attention, purple = low attention)
+
+**Note:** This shows attention for a single layer/head combination. If only entropy data is available (not full attention weights), this will display the attention entropy heatmap instead.
+
 ## Color Palette
 
 The visualization suite uses a colorblind-friendly palette:
@@ -180,10 +241,13 @@ docs/visualizations/
 ├── traditional_001/
 │   ├── surprisal.html
 │   ├── activations.html
-│   └── attention.html
+│   ├── attention.html
+│   ├── attention_head.html      # BertViz (if --include-bertviz)
+│   └── attention_model.html     # BertViz (if --include-bertviz)
 ├── avantgarde_001/
 │   ├── surprisal.html
-│   └── activations.html
+│   ├── activations.html
+│   └── attention_heatmap.html   # Fallback (if no full attention weights)
 └── manifest.json
 ```
 
@@ -200,8 +264,8 @@ The `manifest.json` file provides a machine-readable index of all generated visu
     "entropy_distribution.html"
   ],
   "pieces": {
-    "traditional_001": ["surprisal", "activations", "attention"],
-    "avantgarde_001": ["surprisal", "activations"]
+    "traditional_001": ["surprisal", "activations", "attention", "attention_head", "attention_model"],
+    "avantgarde_001": ["surprisal", "activations", "attention_heatmap"]
   }
 }
 ```
@@ -275,7 +339,14 @@ from visualizations import (
     genre_clustering,
     genre_distribution,
     load_metrics,
-    save_chart
+    save_chart,
+    # BertViz functions
+    prepare_attention_for_bertviz,
+    generate_bertviz_head_view,
+    generate_bertviz_model_view,
+    attention_heatmap_interactive,
+    generate_attention_heatmap_fallback,
+    BERTVIZ_AVAILABLE
 )
 import polars as pl
 
@@ -290,6 +361,44 @@ save_chart(chart, Path("output/perplexity.html"))
 
 # Or display in Jupyter
 chart.display()
+```
+
+### BertViz Integration
+
+```python
+import torch
+from pathlib import Path
+from visualizations import (
+    prepare_attention_for_bertviz,
+    generate_bertviz_head_view,
+    generate_bertviz_model_view,
+    BERTVIZ_AVAILABLE
+)
+
+# Check if BertViz is available
+if BERTVIZ_AVAILABLE:
+    # Attention weights from metrics JSON: [layer][head][from_token][to_token]
+    attention_weights = metrics_data["attention"]["attention_weights"]
+    tokens = metrics_data["tokens"]
+
+    # Convert to BertViz format
+    bertviz_attention = prepare_attention_for_bertviz(attention_weights)
+
+    if bertviz_attention is not None:
+        # Generate head view
+        generate_bertviz_head_view(
+            bertviz_attention,
+            tokens,
+            Path("output/attention_head.html")
+        )
+
+        # Generate model view (dark theme)
+        generate_bertviz_model_view(
+            bertviz_attention,
+            tokens,
+            Path("output/attention_model.html"),
+            display_mode='dark'
+        )
 ```
 
 ## Troubleshooting
