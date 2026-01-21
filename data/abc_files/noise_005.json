@@ -1,15 +1,15 @@
 {
-  "filename": "noise_002.abc",
+  "filename": "noise_005.abc",
   "genre": "noise",
   "subgenre": "pure_random",
   "description": "Completely random pitch and rhythm sequence with no musical coherence",
   "voices": 1,
-  "measures": 16,
-  "time_signature": "3/4",
+  "measures": 9,
+  "time_signature": "7/8",
   "key": "none",
   "tempo": 120,
   "generation_params": {
-    "seed": 44,
+    "seed": 47,
     "algorithm": "pure_random",
     "tonal_center": null
   }

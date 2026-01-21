@@ -1,0 +1,21 @@
+{
+  "filename": "traditional_004.abc",
+  "genre": "traditional",
+  "subgenre": "hymn",
+  "description": "Four-part hymn in C with conventional chord progressions",
+  "voices": 4,
+  "measures": 8,
+  "time_signature": "4/4",
+  "key": "C",
+  "tempo": 72,
+  "generation_params": {
+    "seed": 46,
+    "algorithm": "hymn_chorale",
+    "progression": [
+      1,
+      4,
+      5,
+      1
+    ]
+  }
+}

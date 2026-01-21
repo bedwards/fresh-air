@@ -1,0 +1,16 @@
+{
+  "filename": "traditional_003.abc",
+  "genre": "traditional",
+  "subgenre": "reel",
+  "description": "Reel in A with continuous eighth note patterns",
+  "voices": 1,
+  "measures": 16,
+  "time_signature": "4/4",
+  "key": "A",
+  "tempo": 126,
+  "generation_params": {
+    "seed": 45,
+    "algorithm": "reel",
+    "structure": "AABB"
+  }
+}

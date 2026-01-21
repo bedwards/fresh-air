@@ -1,0 +1,16 @@
+{
+  "filename": "traditional_002.abc",
+  "genre": "traditional",
+  "subgenre": "slip_jig",
+  "description": "Slip jig in Am with compound triple meter (9/8)",
+  "voices": 1,
+  "measures": 16,
+  "time_signature": "9/8",
+  "key": "Am",
+  "tempo": 106,
+  "generation_params": {
+    "seed": 44,
+    "algorithm": "slip_jig",
+    "structure": "AABB"
+  }
+}

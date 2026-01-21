@@ -1,0 +1,16 @@
+{
+  "filename": "traditional_001.abc",
+  "genre": "traditional",
+  "subgenre": "irish_jig",
+  "description": "Irish jig in G with typical compound duple meter patterns",
+  "voices": 1,
+  "measures": 16,
+  "time_signature": "6/8",
+  "key": "G",
+  "tempo": 118,
+  "generation_params": {
+    "seed": 43,
+    "algorithm": "irish_jig",
+    "structure": "AABB"
+  }
+}

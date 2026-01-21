@@ -1,0 +1,16 @@
+{
+  "filename": "avantgarde_002.abc",
+  "genre": "avant-garde",
+  "subgenre": "extended_meter",
+  "description": "Avant-garde piece in 5/4 with wide melodic leaps and chromatic harmony",
+  "voices": 1,
+  "measures": 13,
+  "time_signature": "5/4",
+  "key": "Gphr",
+  "tempo": 94,
+  "generation_params": {
+    "seed": 44,
+    "algorithm": "avant_garde_leaps",
+    "chromatic": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "filename": "terrible_003.abc",
+  "genre": "terrible",
+  "subgenre": "voice_crossing",
+  "description": "Intentionally bad music with voice crossing",
+  "voices": 2,
+  "measures": 11,
+  "time_signature": "4/4",
+  "key": "G",
+  "tempo": 106,
+  "generation_params": {
+    "seed": 45,
+    "algorithm": "bad_voice_leading",
+    "error_type": "voice_crossing"
+  }
+}
