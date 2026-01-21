@@ -1,0 +1,16 @@
+{
+  "filename": "terrible_002.abc",
+  "genre": "terrible",
+  "subgenre": "parallel_fifths",
+  "description": "Intentionally bad music with parallel fifths",
+  "voices": 2,
+  "measures": 12,
+  "time_signature": "4/4",
+  "key": "G",
+  "tempo": 113,
+  "generation_params": {
+    "seed": 44,
+    "algorithm": "bad_voice_leading",
+    "error_type": "parallel_fifths"
+  }
+}

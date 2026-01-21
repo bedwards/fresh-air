@@ -1,0 +1,12 @@
+X:5
+T:Terrible Harmony 005 - Unresolved Dissonance
+C:Generated (Intentionally Bad)
+M:4/4
+L:1/4
+Q:1/4=84
+K:G
+V:1 clef=treble
+C4 | D4 | B4 | B4 | D4 | C4 | C4 | D4 | G4 | ^F4 | C4 |
+V:2 clef=treble
+c4 | d4 | b4 | b4 | d4 | c4 | c4 | d4 | g4 | ^f4 | c4 |
+% WARNING: Contains unresolved major 7ths and minor 2nds

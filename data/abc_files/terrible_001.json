@@ -1,0 +1,16 @@
+{
+  "filename": "terrible_001.abc",
+  "genre": "terrible",
+  "subgenre": "awkward_range",
+  "description": "Intentionally bad music with awkward range",
+  "voices": 2,
+  "measures": 9,
+  "time_signature": "4/4",
+  "key": "C",
+  "tempo": 98,
+  "generation_params": {
+    "seed": 43,
+    "algorithm": "bad_voice_leading",
+    "error_type": "awkward_range"
+  }
+}

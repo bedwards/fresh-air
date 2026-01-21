@@ -1,0 +1,16 @@
+{
+  "filename": "silence_001.abc",
+  "genre": "silence",
+  "subgenre": "sparse",
+  "description": "Sparse piece with extended silences and isolated notes",
+  "voices": 1,
+  "measures": 20,
+  "time_signature": "4/4",
+  "key": "C",
+  "tempo": 49,
+  "generation_params": {
+    "seed": 43,
+    "algorithm": "sparse_silence",
+    "note_density": 0.15
+  }
+}

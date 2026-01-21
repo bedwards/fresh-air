@@ -1,0 +1,19 @@
+X:2
+T:Experimental 002
+C:Generated
+M:4/4
+L:1/16
+Q:1/4=66
+K:none
+V:1 clef=treble name="Voice 1"
+V:2 clef=treble name="Voice 2"
+V:3 clef=bass name="Voice 3"
+V:4 clef=bass name="Voice 4"
+V:1
+^g'8 F ^g'6 g | F z6 ^g' ^G z2 ^g'''5 | b ^c''3 e''2 G3 e'3 ^d''4 | C2 a''6 a'6 ^G2 | ^G f'3 d6 e4 e'' z | F4 e''3 ^c'''6 ^c'2 z | ^d'4 z6 ^D3 e3 | g'6 g''4 g' E2 g z2 | e8 g'6 z2 | z2 G ^g'4 g2 g4 ^g'2 a | a'4 C2 z3 b'2 B5 | d2 ^c'8 ^a'4 a''2 | A z8 z4 B3 | z3 z d6 c'' C5 | c''8 ^D6 f''2 | d''2 d6 e3 ^F ^f'3 z |
+V:2
+E2 F4 G4 ^g''2 G4 | A8 z4 g G,,3 | z6 f4 ^F2 G4 | ^G8 z6 z2 | ^A z6 B4 B5 | ^G4 z6 G,,3 z2 F | z E2 z6 z3 z2 ^f''2 | F2 ^F e6 F,,4 f'3 | d z z z z2 z8 c2 | z6 A,,8 z2 | c'3 C2 z ^C2 ^D8 | ^D C2 a' ^A,,4 z4 ^c'' ^c''2 ^C | ^a' A8 z2 G,,5 | ^A,,8 z2 G A,, A4 | G8 e'2 G3 G,, z2 | g'3 a4 b6 z3 |
+V:3
+A ^A8 ^C2 B4 d' | e F6 d' D C2 z3 C2 | ^D6 ^D2 C4 ^c'4 | ^d'2 ^D6 f'4 ^G4 | B3 A4 z4 ^a'3 z a' | A6 z2 B6 B,,2 | b2 ^c'3 z2 z3 z3 ^d'3 | E3 e ^D c2 B2 A2 ^F3 ^G2 | ^G3 F2 ^d''8 F2 z | d2 B6 B6 z2 | z2 D2 f'6 F3 f3 | ^G,,2 ^A2 ^A,,8 B,,4 | z8 b'2 b'6 | ^G2 B B,,4 b3 z4 A,,2 | c3 C,,4 z B4 ^c'' ^D3 | ^c' D,,8 B,,3 ^c''3 ^C |
+V:4
+^D,,8 ^D,,6 ^F,,2 | A z3 ^G,,3 F,,, F,, ^F2 f2 z3 | z6 E ^C8 z | ^D,,3 D8 ^D,,,5 | D4 E8 ^F3 ^F | ^D,,4 E6 f6 | z3 F,,,6 F2 ^d'4 F | ^F,,2 ^G2 ^A2 g3 E,,2 G4 z | ^F4 ^F,,,2 a2 z3 C3 z2 | A4 z4 ^A C4 C,,3 | ^A,,4 ^C8 B4 | ^A8 ^C,,,4 z3 ^d' | F3 d3 f z2 ^F6 F | F4 ^D F8 E3 | z3 ^C8 ^a'4 A | b2 B2 A8 A,,4 |

@@ -1,0 +1,16 @@
+{
+  "filename": "terrible_005.abc",
+  "genre": "terrible",
+  "subgenre": "unresolved_dissonance",
+  "description": "Intentionally bad music with unresolved dissonance",
+  "voices": 2,
+  "measures": 11,
+  "time_signature": "4/4",
+  "key": "G",
+  "tempo": 84,
+  "generation_params": {
+    "seed": 47,
+    "algorithm": "bad_voice_leading",
+    "error_type": "unresolved_dissonance"
+  }
+}

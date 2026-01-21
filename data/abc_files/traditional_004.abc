@@ -1,0 +1,15 @@
+X:4
+T:Hymn 004
+C:Generated
+M:4/4
+L:1/4
+Q:1/4=72
+K:C
+V:S clef=treble name="Soprano"
+c4 | f4 | g4 | c4 | c4 | f4 | g4 | c4 |
+V:A clef=treble name="Alto"
+E4 | A4 | B4 | E4 | E4 | A4 | B4 | E4 |
+V:T clef=treble-8 name="Tenor"
+G4 | C4 | D4 | G4 | G4 | C4 | D4 | G4 |
+V:B clef=bass name="Bass"
+C,4 | F,4 | G,4 | C,4 | C,4 | F,4 | G,4 | C,4 |

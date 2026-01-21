@@ -1,0 +1,12 @@
+X:3
+T:Terrible Harmony 003 - Voice Crossing
+C:Generated (Intentionally Bad)
+M:4/4
+L:1/4
+Q:1/4=106
+K:G
+V:1 clef=treble name="High Voice"
+d4 | G,4 | d4 | G,4 | d4 | G,4 | d4 | G,4 | d4 | G,4 | d4 |
+V:2 clef=bass name="Low Voice"
+G4 | d4 | G4 | d4 | G4 | d4 | G4 | d4 | G4 | d4 | G4 |
+% WARNING: Voices cross each other repeatedly

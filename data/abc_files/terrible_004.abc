@@ -1,0 +1,12 @@
+X:4
+T:Terrible Harmony 004 - Unresolved Dissonance
+C:Generated (Intentionally Bad)
+M:4/4
+L:1/4
+Q:1/4=105
+K:C
+V:1 clef=treble
+G4 | B4 | D4 | A4 | G4 | D4 | G4 | G4 |
+V:2 clef=treble
+g4 | b4 | d4 | a4 | g4 | d4 | g4 | g4 |
+% WARNING: Contains unresolved major 7ths and minor 2nds

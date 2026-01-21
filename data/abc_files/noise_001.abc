@@ -1,6 +1,8 @@
 X:1
 T:Noise Sequence 001
+C:Generated (Random)
 M:4/4
 L:1/8
 K:none
-^C/4 =E,,/4 =G,,8 =G''/2 D,,2 F,3 ^G'/2 _G''3 F,, ^D,,6 E,, =C''8 =E''3 _D,, _G3 A''2 | _E'/2 =C'2 E,3 G/2 F''3 C,,3 _A,,2 =A''6 _B'/2 C,,4 ^B'/2 =E''8 F3 ^G, _A,4 ^E,/2 |
+% Deliberately random - no tonal center or coherent rhythm
+=e''2 __F,,/3 __e'6 C,,6 __d3 | __E,6 z ^C/2 __c'' z/2 _a/3 b =d'2 =G,,/2 =B6 __F,,/4 =c''3 | =c'6 ^C,,2 B, _B,,/3 =b/4 z z2 ^^A,6 ^^g6 z2 =d'' ^E4 | ^F,,8 C,,/3 __b'/3 _G4 ^F, d'6 F,,3 _E/3 =D,4 | z4 =E,,8 _D, =F,/2 _f''8 =e'8 | ^^a'2 =a''3 =C,,2 ^A,4 __A,,/2 ^^f2 _A3 _e2 _F4 _D6 __e'' | ^D,3 __a'4 ^^f'3 b''/3 ^^c/3 | __a ^^a'8 c''8 _C,,4 | =a'6 _D,,2 c'/4 _A,/4 ^^F,, ^C,,4 D z z2 __F,3 | ^^g''6 _f'4 ^^A,,/3 ^^D,,3 c2 =c/3 B,/4 F, | A a'/3 __B,,/4 _g/2 =f''2 z z/2 __b c''6 _E,,/4 z2 | _e'8 ^^C/3 ^^F8 =g/2 _C/2 __g'8 =f6 c'' =D/4 ^^g __D/2 |

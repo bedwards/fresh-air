@@ -1,0 +1,16 @@
+{
+  "filename": "avantgarde_001.abc",
+  "genre": "avant-garde",
+  "subgenre": "extended_meter",
+  "description": "Avant-garde piece in 5/8 with wide melodic leaps and chromatic harmony",
+  "voices": 1,
+  "measures": 19,
+  "time_signature": "5/8",
+  "key": "Elyd",
+  "tempo": 69,
+  "generation_params": {
+    "seed": 43,
+    "algorithm": "avant_garde_leaps",
+    "chromatic": true
+  }
+}

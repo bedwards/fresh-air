@@ -1,0 +1,16 @@
+{
+  "filename": "avantgarde_005.abc",
+  "genre": "avant-garde",
+  "subgenre": "extended_meter",
+  "description": "Avant-garde piece in 11/8 with wide melodic leaps and chromatic harmony",
+  "voices": 1,
+  "measures": 20,
+  "time_signature": "11/8",
+  "key": "Cmix",
+  "tempo": 87,
+  "generation_params": {
+    "seed": 47,
+    "algorithm": "avant_garde_leaps",
+    "chromatic": true
+  }
+}

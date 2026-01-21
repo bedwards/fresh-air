@@ -1,0 +1,16 @@
+{
+  "filename": "experimental_005.abc",
+  "genre": "experimental",
+  "subgenre": "chromatic_polyphony",
+  "description": "Dense 4-voice chromatic piece with extreme register changes and independent lines",
+  "voices": 4,
+  "measures": 9,
+  "time_signature": "4/4",
+  "key": "none",
+  "tempo": 62,
+  "generation_params": {
+    "seed": 47,
+    "algorithm": "chromatic_4voice",
+    "independent_voices": true
+  }
+}
