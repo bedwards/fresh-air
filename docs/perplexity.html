@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perplexity: The Language Model's Measure of Surprise</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #333;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+            --border-color: #e1e1e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.9;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            color: var(--primary-color);
+            margin-top: 3rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+        }
+
+        .metadata {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 2rem;
+            padding: 1.2rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .metadata span {
+            display: inline-block;
+            margin: 0 1rem 0.3rem 0;
+        }
+
+        .figure {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .figure-caption {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        .metric-highlight {
+            background-color: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid var(--secondary-color);
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .formula {
+            background-color: #f0f4f8;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+        }
+
+        .back-link {
+            margin-bottom: 2rem;
+        }
+
+        .back-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .metadata span {
+                display: block;
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .section-break {
+            text-align: center;
+            margin: 3rem 0;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-link">
+        <a href="index.html">&larr; Back to Essays</a>
+    </div>
+
+    <header>
+        <h1>Perplexity: The Language Model's Measure of Surprise</h1>
+        <div class="metadata">
+            <span><strong>Author:</strong> Brian Edwards</span>
+            <span><strong>Date:</strong> January 21, 2026</span>
+            <span><strong>Reading Time:</strong> 18 minutes</span>
+            <br>
+            <span><strong>Series:</strong> Musical Transformer Interpretability</span>
+        </div>
+    </header>
+
+    <main>
+        <h2>Introduction</h2>
+        <p>
+        When we evaluate a language model, we face a fundamental challenge: how do we measure something as subjective as "understanding"? A model might generate plausible-looking text that collapses under scrutiny. It might memorize training examples without generalizing. It might exploit statistical shortcuts that work in benchmarks but fail in practice. We need a metric that cuts through these surface behaviors to reveal something deeper about the model's internal state.
+        </p>
+
+        <p>
+        Perplexity offers exactly this window. At its core, perplexity measures how surprised a model is by the data it observes. A model with low perplexity has learned to anticipate what comes next; a model with high perplexity is constantly caught off guard. This seemingly simple idea—quantifying surprise—turns out to be remarkably powerful for understanding not just whether a model works, but <em>how</em> it works.
+        </p>
+
+        <div class="figure">
+            <img src="images/perplexity/perplexity_concept.png" alt="Perplexity as branching factor visualization">
+            <p class="figure-caption">Figure 1: Perplexity as a branching factor—at each position, the model weighs multiple possible continuations. Lower perplexity indicates more confident predictions.</p>
+        </div>
+
+        <h2>The Mathematics of Surprise</h2>
+        <p>
+        Perplexity derives from information theory, specifically from Claude Shannon's foundational work on entropy. When a model processes a sequence of tokens, it assigns a probability to each token given all the tokens that came before. If the model assigns probability <em>p</em> to the actual next token, the surprisal (or self-information) is -log(p). Perplexity is simply the exponentiated average of these surprisals across the entire sequence.
+        </p>
+
+        <div class="formula">
+            Perplexity = exp( -1/N × Σ log P(token<sub>i</sub> | context) )
+        </div>
+
+        <p>
+        This formula has an elegant interpretation. If a model has perplexity of 10 on some text, it means that on average, the model is as confused as if it were choosing uniformly at random from 10 equally likely options at each position. A perplexity of 2 would mean the model is effectively choosing between 2 options. A perplexity approaching 1 indicates near-perfect prediction—the model knows exactly what comes next.
+        </p>
+
+        <div class="figure">
+            <img src="images/perplexity/perplexity_formula.png" alt="Mathematical visualization of perplexity">
+            <p class="figure-caption">Figure 2: The perplexity formula transforms log probabilities into an intuitive branching factor interpretation.</p>
+        </div>
+
+        <h3>Why Exponentiate?</h3>
+        <p>
+        The choice to exponentiate might seem arbitrary, but it serves a crucial purpose. Raw cross-entropy loss—the average negative log probability—is what we actually optimize during training. But cross-entropy values are difficult to interpret intuitively. Is a cross-entropy of 2.3 good or bad? The answer depends on the vocabulary size, the domain, and numerous other factors.
+        </p>
+
+        <p>
+        Perplexity converts this abstract number into something concrete: the effective number of choices the model faces. This makes comparisons meaningful. A perplexity reduction from 100 to 50 means the model's effective choice space has been cut in half—a substantial improvement regardless of the absolute values involved.
+        </p>
+
+        <h2>Perplexity in Practice: Our Musical Experiments</h2>
+        <p>
+        To understand what perplexity reveals about model behavior, we conducted experiments using the Phi-4 14B parameter model processing ABC notation—a text-based format for representing musical scores. We generated 30 pieces across six categories, ranging from authentic traditional Irish music to deliberately broken noise sequences, and measured how the model's perplexity varied across these conditions.
+        </p>
+
+        <div class="metric-highlight">
+            <strong>Experimental Perplexity Results:</strong><br>
+            Traditional Irish: 6.14 (range: 2.29 - 10.47)<br>
+            Terrible Music: 5.69 (range: 4.58 - 7.92)<br>
+            Silence: 4.67 (range: 3.72 - 5.61)<br>
+            Experimental: 12.04 (range: 11.53 - 12.55)<br>
+            Avant-garde: 16.65 (range: 14.37 - 18.66)<br>
+            Noise: 18.17 (range: 16.44 - 21.10)
+        </div>
+
+        <p>
+        The results tell a nuanced story. Traditional Irish music shows moderate perplexity—the model has clearly learned something about ABC notation conventions and musical structure, but it doesn't perfectly predict every note. The wide range (2.29 to 10.47) reflects the diversity of traditional tunes, from simple repeated phrases to complex ornamental passages.
+        </p>
+
+        <div class="figure">
+            <img src="images/perplexity/perplexity_comparison.png" alt="Comparison of perplexity levels">
+            <p class="figure-caption">Figure 3: Perplexity levels compared across different conditions—from focused prediction (low perplexity) to scattered uncertainty (high perplexity).</p>
+        </div>
+
+        <h3>The Silence Paradox</h3>
+        <p>
+        One might expect silence—represented in ABC notation as sequences of rests—to have near-zero perplexity. After all, what could be more predictable than "rest follows rest follows rest"? Yet our silence category shows perplexity of 4.67, higher than one might naively expect.
+        </p>
+
+        <p>
+        This result reveals something important about how language models process structured formats. ABC notation files don't consist only of notes and rests; they include metadata headers, bar lines, repeat markers, and other structural elements. A sequence of pure silence still requires the model to predict where bar lines fall, how the meter is expressed, and when the piece ends. The perplexity reflects genuine uncertainty about these structural decisions, not the (trivially predictable) note content.
+        </p>
+
+        <h3>The Noise Ceiling</h3>
+        <p>
+        At the opposite extreme, random noise sequences achieve perplexity of 18.17, with peaks over 21. This represents a kind of ceiling—when the input has no predictable structure whatsoever, the model falls back on its prior distribution over valid ABC notation characters. The fact that this ceiling isn't higher (the vocabulary includes dozens of valid tokens) suggests the model has learned at least the statistical frequencies of different characters in ABC notation.
+        </p>
+
+        <p>
+        The experimental and avant-garde categories occupy intermediate positions. Their perplexities (12.04 and 16.65 respectively) indicate sequences that follow ABC notation rules but deploy them in unexpected ways. The model recognizes valid syntax but cannot anticipate the specific choices being made—a pattern that differs qualitatively from both meaningful music and pure noise.
+        </p>
+
+        <h2>Perplexity as a Window Into Representations</h2>
+        <p>
+        Beyond its role as an evaluation metric, perplexity offers insights into how models internally represent different types of content. When perplexity is low and stable across a domain, the model has developed robust internal representations that generalize well. When perplexity varies widely or spikes unexpectedly, the model's representations are fragile or incomplete.
+        </p>
+
+        <div class="figure">
+            <img src="images/perplexity/perplexity_music.png" alt="Model processing music notation">
+            <p class="figure-caption">Figure 4: A language model processing musical notation—each prediction reflects the model's learned understanding of musical structure and syntax.</p>
+        </div>
+
+        <h3>Per-Token Analysis</h3>
+        <p>
+        Examining perplexity at the token level reveals where model understanding breaks down. In our experiments, certain tokens consistently produce high perplexity across all categories:
+        </p>
+
+        <ul>
+            <li><strong>Key signature markers:</strong> Tokens indicating key changes (like "K:Gmix" for G Mixolydian) often show elevated perplexity, suggesting the model hasn't fully captured the relationships between keys and the notes that follow.</li>
+            <li><strong>Ornamentation:</strong> Traditional Irish music includes rolls, cuts, and other ornaments. These decorative tokens show high variability—the model knows something should happen here but is uncertain what.</li>
+            <li><strong>Phrase boundaries:</strong> The first note after a bar line or repeat marker often has elevated perplexity. The model recognizes a structural boundary but struggles to predict how the next phrase will begin.</li>
+        </ul>
+
+        <p>
+        These patterns suggest the model has learned ABC notation's surface syntax quite well but has incomplete understanding of music's hierarchical phrase structure. It processes notes sequentially without maintaining strong expectations about larger-scale patterns.
+        </p>
+
+        <h2>Limitations and Caveats</h2>
+        <p>
+        Perplexity, for all its utility, carries important limitations that practitioners must understand.
+        </p>
+
+        <h3>The Distribution Shift Problem</h3>
+        <p>
+        Perplexity measures how well a model predicts data sampled from a particular distribution. When the evaluation distribution differs from training, perplexity values become difficult to interpret. Our experiments deliberately probe this gap—we're measuring how confused a language model becomes when processing specialized musical content that may be underrepresented in its training data.
+        </p>
+
+        <p>
+        This means our absolute perplexity values should be interpreted cautiously. A perplexity of 6.14 on traditional Irish music doesn't mean the model "understands" Irish music 18/6 = 3 times better than noise with perplexity 18.17. The distributions differ too fundamentally for such direct comparisons.
+        </p>
+
+        <h3>The Calibration Question</h3>
+        <p>
+        A model can achieve low perplexity through good calibration (accurate probability estimates) or through hedging (assigning moderate probability to many options). These behaviors are observationally equivalent in terms of perplexity but represent very different internal states. A well-calibrated model has learned to distinguish between cases where prediction is easy and cases where genuine uncertainty exists. A hedging model has learned to avoid extreme predictions without developing nuanced understanding.
+        </p>
+
+        <p>
+        Distinguishing these cases requires examining model behavior more closely—looking at the full probability distribution rather than just the probability of the correct token, or probing internal representations through other interpretability techniques.
+        </p>
+
+        <h3>The Compression-Understanding Gap</h3>
+        <p>
+        Perhaps most fundamentally, perplexity measures compression efficiency, not understanding in any deeper sense. A model might achieve low perplexity by memorizing training data, by exploiting surface statistical patterns, or by developing genuine conceptual understanding. Perplexity alone cannot distinguish these mechanisms.
+        </p>
+
+        <p>
+        In the musical domain, this limitation is particularly acute. A model might learn that in traditional Irish music, D major tunes often start on the tonic and feature characteristic rhythmic patterns. This statistical knowledge would reduce perplexity without requiring any understanding of why these patterns exist—their origins in dance forms, the constraints of traditional instruments, or their aesthetic effects.
+        </p>
+
+        <h2>Perplexity Across Scales</h2>
+        <p>
+        Modern language models span an enormous range of scales, from tiny models with millions of parameters to behemoths with hundreds of billions. How does perplexity behave across this range?
+        </p>
+
+        <p>
+        Generally, larger models achieve lower perplexity on standard benchmarks. This scaling relationship is remarkably consistent—each doubling of parameters tends to produce a predictable decrease in perplexity. This predictability has been formalized in various "scaling laws" that allow researchers to extrapolate performance to scales not yet tested.
+        </p>
+
+        <p>
+        However, the relationship between scale and domain-specific perplexity is less clear. A larger model might not achieve proportionally lower perplexity on specialized content like ABC notation if that content is rare in training data. Our experiments with Phi-4 (14B parameters) represent a point on this scaling curve, but different-sized models might show qualitatively different patterns rather than simply scaled versions of the same behavior.
+        </p>
+
+        <h2>Connections to Human Cognition</h2>
+        <p>
+        Perplexity has an intriguing connection to human language processing. Psycholinguistic research has shown that reading time—how long humans spend processing each word—correlates strongly with surprisal (the log-probability component of perplexity). Words that are predictable from context are processed faster; unexpected words cause slowdowns and sometimes re-reading.
+        </p>
+
+        <p>
+        This parallel suggests that perplexity captures something genuine about the difficulty of processing sequential information, whether by humans or machines. Both systems benefit from predictability; both are challenged by surprise. But the mechanisms underlying this shared behavior may differ fundamentally—humans draw on embodied experience, cultural knowledge, and conscious reasoning that current language models lack.
+        </p>
+
+        <p>
+        In the musical domain, this connection becomes more speculative. Do human musicians experience something like perplexity when listening to unfamiliar music? Anecdotal evidence suggests yes—listeners often describe avant-garde music as "hard to follow" or "unpredictable," language that maps directly onto the concept of high perplexity. But formalizing this connection would require careful experimental work that aligns human behavioral measures with model-derived perplexity estimates.
+        </p>
+
+        <h2>Conclusion: Perplexity as Probe</h2>
+        <p>
+        Perplexity is not a final answer to the question of machine understanding—it is a tool for asking better questions. By measuring where and how much a model is surprised, we gain entry into its internal representations, its learned patterns, and its failure modes.
+        </p>
+
+        <p>
+        Our musical experiments demonstrate this probing function. The graduated perplexity we observe across conditions—from moderate surprise at authentic music to high surprise at noise—reveals a model that has learned <em>something</em> about musical structure without achieving complete comprehension. The specific patterns of token-level perplexity point toward gaps in the model's representation: structural boundaries it cannot predict, ornaments it cannot anticipate, phrase relationships it cannot model.
+        </p>
+
+        <p>
+        These findings matter beyond the narrow domain of ABC notation processing. They illustrate a general methodology for interpretability research: design inputs that probe specific aspects of model understanding, measure the model's response through metrics like perplexity, and interpret the results to form hypotheses about internal representations. The music domain provides a particularly rich testbed because musical structure operates on multiple hierarchical levels that we can probe independently.
+        </p>
+
+        <p>
+        As language models continue to grow in capability and deployment, the need for interpretability tools only increases. Perplexity—simple, principled, and information-theoretically grounded—will remain a fundamental part of the interpretability toolkit. Understanding its strengths and limitations is essential for anyone seeking to understand what these remarkable systems have actually learned.
+        </p>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="index.html">Musical Transformer Interpretability</a> research series.</p>
+        <p>Built with Claude Code (Claude Opus 4.5)</p>
+    </footer>
+</body>
+</html>

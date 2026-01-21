@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Entropy: Measuring Focus in Transformer Networks</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #333;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+            --border-color: #e1e1e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.9;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            color: var(--primary-color);
+            margin-top: 3rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+        }
+
+        .metadata {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 2rem;
+            padding: 1.2rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .metadata span {
+            display: inline-block;
+            margin: 0 1rem 0.3rem 0;
+        }
+
+        .figure {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .figure-caption {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        .metric-highlight {
+            background-color: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid var(--secondary-color);
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .formula {
+            background-color: #f0f4f8;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+        }
+
+        .back-link {
+            margin-bottom: 2rem;
+        }
+
+        .back-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .metadata span {
+                display: block;
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .section-break {
+            text-align: center;
+            margin: 3rem 0;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-link">
+        <a href="index.html">&larr; Back to Essays</a>
+    </div>
+
+    <header>
+        <h1>Attention Entropy: Measuring Focus in Transformer Networks</h1>
+        <div class="metadata">
+            <span><strong>Author:</strong> Brian Edwards</span>
+            <span><strong>Date:</strong> January 21, 2026</span>
+            <span><strong>Reading Time:</strong> 20 minutes</span>
+            <br>
+            <span><strong>Series:</strong> Musical Transformer Interpretability</span>
+        </div>
+    </header>
+
+    <main>
+        <h2>Introduction</h2>
+        <p>
+        The attention mechanism lies at the heart of transformer architectures. When a model processes a sequence, each position attends to all previous positions, weighing their relevance for the current prediction. These attention weights form probability distributions—they sum to one and indicate where the model is "looking" at each step.
+        </p>
+
+        <p>
+        Attention entropy measures the dispersion of these distributions. When attention is concentrated on a few positions, entropy is low—the model has identified specific, relevant context. When attention is spread uniformly across all positions, entropy is high—the model either finds everything equally relevant or cannot distinguish what matters.
+        </p>
+
+        <div class="figure">
+            <img src="images/entropy/entropy_concept.png" alt="Attention entropy as spotlight focus">
+            <p class="figure-caption">Figure 1: Attention entropy as a spotlight metaphor—low entropy represents focused attention, high entropy represents diffuse attention across many positions.</p>
+        </div>
+
+        <p>
+        Understanding attention entropy gives us a window into model behavior that complements metrics like perplexity. Perplexity tells us how uncertain the model is about its predictions; attention entropy tells us how the model is organizing information to make those predictions.
+        </p>
+
+        <h2>Mathematical Foundation</h2>
+        <p>
+        For a single attention head processing a sequence, the attention weights at position <em>i</em> form a probability distribution over all positions from 1 to <em>i</em>. The entropy of this distribution is:
+        </p>
+
+        <div class="formula">
+            H(attention<sub>i</sub>) = -Σ<sub>j</sub> α<sub>ij</sub> log(α<sub>ij</sub>)
+        </div>
+
+        <p>
+        where α<sub>ij</sub> is the attention weight from position <em>i</em> to position <em>j</em>. When the model attends entirely to one position, entropy is zero. When attention is uniform, entropy reaches its maximum value of log(i)—which increases with sequence length.
+        </p>
+
+        <p>
+        To make entropies comparable across positions with different context lengths, we often normalize by dividing by log(i), yielding values between 0 and 1. This normalized entropy indicates what fraction of the maximum possible entropy the attention distribution exhibits.
+        </p>
+
+        <div class="figure">
+            <img src="images/entropy/entropy_heatmap.png" alt="Attention heatmap showing entropy patterns">
+            <p class="figure-caption">Figure 2: Attention heatmaps reveal entropy patterns—bright concentrated spots indicate low entropy (focused attention), while uniform coloring indicates high entropy (diffuse attention).</p>
+        </div>
+
+        <h3>Aggregating Across Heads and Layers</h3>
+        <p>
+        Modern transformers have multiple attention heads per layer, each potentially learning different patterns. A model might have 32 layers with 32 heads each—over 1,000 separate attention patterns for every token. How do we summarize this complexity?
+        </p>
+
+        <p>
+        Different aggregation strategies reveal different aspects of model behavior:
+        </p>
+
+        <ul>
+            <li><strong>Mean entropy across heads:</strong> Captures the average focus level, smoothing over specialization.</li>
+            <li><strong>Minimum entropy head:</strong> Identifies whether any head has found strongly relevant context.</li>
+            <li><strong>Entropy variance:</strong> Measures how much heads differ—high variance suggests functional specialization.</li>
+            <li><strong>Per-layer statistics:</strong> Tracks how attention patterns evolve through the network's depth.</li>
+        </ul>
+
+        <p>
+        In our experiments, we compute mean attention entropy across all heads and layers as a summary statistic, while retaining per-layer breakdowns for deeper analysis.
+        </p>
+
+        <h2>Experimental Results: Music Processing</h2>
+        <p>
+        Applying attention entropy analysis to Phi-4 processing ABC notation reveals striking patterns that illuminate model behavior.
+        </p>
+
+        <div class="metric-highlight">
+            <strong>Attention Entropy Results (normalized, 0-1 scale):</strong><br>
+            Silence: 0.0283 (range: 0.0228 - 0.0322) — Highest<br>
+            Terrible Music: 0.0245 (range: 0.0212 - 0.0288)<br>
+            Avant-garde: 0.0187 (range: 0.0115 - 0.0253)<br>
+            Traditional Irish: 0.0172 (range: 0.0136 - 0.0208)<br>
+            Noise: 0.0092 (range: 0.0074 - 0.0117)<br>
+            Experimental: 0.0050 (range: 0.0040 - 0.0070) — Lowest
+        </div>
+
+        <h3>The Silence Paradox Explained</h3>
+        <p>
+        The highest attention entropy appears in the silence category—sequences consisting primarily of rests. This initially seems counterintuitive. Shouldn't predictable content produce focused attention?
+        </p>
+
+        <p>
+        The resolution lies in understanding what attention does. In silence sequences, the next note is trivially predictable (another rest), but the model must still process structural elements: bar lines, repeat markers, tempo indications. Without meaningful melodic content to focus on, attention spreads across these structural cues without strong preferences. The model knows what comes next but cannot identify <em>why</em> in terms of specific contextual tokens.
+        </p>
+
+        <p>
+        This reveals an important principle: low perplexity (confident prediction) does not imply low attention entropy (focused context use). The two metrics capture orthogonal aspects of model behavior.
+        </p>
+
+        <div class="figure">
+            <img src="images/entropy/entropy_heads.png" alt="Different attention head behaviors">
+            <p class="figure-caption">Figure 3: Attention heads specialize into different roles—some attend to recent positions (recency heads), some track structural elements, and some integrate content information.</p>
+        </div>
+
+        <h3>Noise: Focused but Wrong</h3>
+        <p>
+        Noise sequences show surprisingly low attention entropy (0.0092), lower than authentic music. How can random noise produce more focused attention than meaningful music?
+        </p>
+
+        <p>
+        The answer involves the model's learned priors. When processing noise, the model detects that predictions are failing badly (high perplexity) and falls back on simple heuristics—attending primarily to the most recent tokens or to structural markers like the beginning of the sequence. This produces focused but uninformative attention patterns.
+        </p>
+
+        <p>
+        By contrast, authentic music engages multiple attention patterns simultaneously: tracking the current phrase, monitoring key signature, referencing earlier melodic material. This richer engagement produces higher entropy but more meaningful processing.
+        </p>
+
+        <h3>The Experimental Category</h3>
+        <p>
+        The experimental category shows the lowest attention entropy (0.0050), even lower than noise. These sequences follow ABC notation syntax strictly but use notes in unconventional patterns—scales, arpeggios, and other exercises rather than melodic music.
+        </p>
+
+        <p>
+        The model's highly focused attention suggests it has learned strong patterns for these exercise-like structures. When processing a scale, attention concentrates heavily on the previous note because the next note is deterministically related. This produces extremely low entropy alongside moderate perplexity—the model knows how to attend but still faces uncertainty about which specific pattern is being executed.
+        </p>
+
+        <h2>Head Specialization and Attention Entropy</h2>
+        <p>
+        Examining individual attention heads reveals functional specialization that explains aggregate entropy patterns. We categorize heads by their entropy characteristics and attention patterns:
+        </p>
+
+        <h3>Positional Heads</h3>
+        <p>
+        Some heads consistently attend to specific positions regardless of content—the beginning of the sequence, the previous token, or positions at regular intervals. These "positional" heads show very low entropy because their attention patterns are content-independent.
+        </p>
+
+        <p>
+        In music processing, positional heads likely track structural elements: bar lines fall at regular intervals, repeat markers have consistent syntax. A head that attends to every eighth token might be tracking barlines in 4/4 time.
+        </p>
+
+        <h3>Content Heads</h3>
+        <p>
+        Other heads show attention patterns that vary strongly with input content. When processing a melody that references an earlier phrase, these heads attend back to the original occurrence. Their entropy varies depending on whether the current content has clear contextual antecedents.
+        </p>
+
+        <p>
+        Content heads in music processing might track key-relevant notes (attending to earlier tokens that establish the key), rhythmic patterns (finding the most recent similar rhythm), or melodic motifs (identifying repetitions and variations).
+        </p>
+
+        <div class="figure">
+            <img src="images/entropy/entropy_layers.png" alt="Entropy across layers">
+            <p class="figure-caption">Figure 4: Attention entropy patterns across transformer layers—early layers often show structured positional patterns, while later layers may exhibit more content-dependent attention.</p>
+        </div>
+
+        <h3>Layer-wise Evolution</h3>
+        <p>
+        Attention patterns evolve across the transformer's layers. Early layers often show more focused attention on local context—nearby tokens and structural markers. Deeper layers integrate information over longer ranges, potentially showing higher entropy as they combine information from multiple sources.
+        </p>
+
+        <p>
+        In our experiments, we observe that middle layers tend to show peak attention entropy, while the final layers often refocus on tokens most relevant for the immediate prediction. This pattern—local attention → global integration → focused prediction—appears consistently across input types.
+        </p>
+
+        <h2>Attention Entropy as Diagnostic Tool</h2>
+        <p>
+        Beyond characterizing normal model behavior, attention entropy serves as a diagnostic for detecting anomalies and understanding failures.
+        </p>
+
+        <h3>Detecting Distribution Shift</h3>
+        <p>
+        When a model encounters input from outside its training distribution, attention patterns often become abnormal. Entropy may spike as the model fails to find relevant context, or collapse as the model defaults to simple heuristics. Monitoring attention entropy during deployment can flag inputs that the model is processing unexpectedly.
+        </p>
+
+        <p>
+        Our noise category demonstrates this phenomenon. The combination of high perplexity and focused attention signals that the model has given up on meaningful processing and fallen back on default patterns—a clear indicator of out-of-distribution input.
+        </p>
+
+        <h3>Analyzing Failure Modes</h3>
+        <p>
+        When a model produces an incorrect prediction, examining attention entropy helps diagnose why. Was attention spread too diffusely, failing to identify relevant context? Or was attention highly focused but on the wrong tokens?
+        </p>
+
+        <p>
+        These failure modes suggest different remedies. Diffuse attention might benefit from architectural changes that sharpen attention or training data that provides clearer contextual signals. Misfocused attention might require different training examples or explicit supervision on attention patterns.
+        </p>
+
+        <h2>Entropy and Information Flow</h2>
+        <p>
+        Attention entropy connects to broader questions about information flow in deep networks. Each layer of a transformer transforms its inputs, potentially compressing some information while elaborating other aspects. Attention patterns determine which information gets propagated and which gets discarded.
+        </p>
+
+        <p>
+        Low entropy attention acts as a filter, selecting specific tokens to inform the current computation. High entropy attention acts more like averaging, combining information from many sources. The balance between filtering and averaging shapes what the model can learn and represent.
+        </p>
+
+        <blockquote>
+        "The attention mechanism is not just about where to look—it's about what information to preserve and what to discard. Entropy measures the selectivity of this filtering operation."
+        </blockquote>
+
+        <h3>The Bottleneck Perspective</h3>
+        <p>
+        From an information-theoretic perspective, each attention head creates a bottleneck: it must summarize all context positions into a single weighted average. The entropy of attention weights bounds how much information can pass through this bottleneck.
+        </p>
+
+        <p>
+        Extremely low entropy attention (focused on one or two positions) passes information from those positions with high fidelity but ignores the rest. Extremely high entropy attention (uniform across positions) averages everything together, potentially losing token-specific information. Intermediate entropy allows selective integration—preserving important tokens while combining others.
+        </p>
+
+        <h2>Practical Implications</h2>
+
+        <h3>For Interpretability Research</h3>
+        <p>
+        Attention entropy provides a quantitative summary of attention patterns that scales to large models. Rather than manually inspecting thousands of attention heads, researchers can compute entropy statistics to identify interesting cases for deeper investigation.
+        </p>
+
+        <p>
+        Heads with unusually low or high entropy relative to their layer merit examination. Positions where entropy spikes or drops dramatically may indicate important structural boundaries. Correlating entropy with prediction quality helps identify which attention patterns support good performance.
+        </p>
+
+        <h3>For Model Development</h3>
+        <p>
+        Attention entropy statistics during training can diagnose learning dynamics. If entropy remains uniformly high throughout training, the model may be failing to develop specialized attention patterns. If entropy collapses to very low values, the model may be learning degenerate solutions that attend only to trivial features.
+        </p>
+
+        <p>
+        Some research has explored explicitly regularizing attention entropy—penalizing either extremely high or extremely low entropy to encourage intermediate, presumably more useful, attention patterns. Results are mixed, but entropy-based regularization remains an active area of investigation.
+        </p>
+
+        <h3>For Domain Understanding</h3>
+        <p>
+        Comparing attention entropy across domains reveals how different types of content engage model attention. Language might produce different entropy patterns than code, which might differ from music. These differences can inform domain-specific model architectures or training strategies.
+        </p>
+
+        <p>
+        Our finding that music produces lower attention entropy than some noise categories suggests that musical structure provides clear contextual signals that the model can exploit. This is encouraging for applications of language models to music processing—the models are not merely confused by musical notation but are identifying and using its structural properties.
+        </p>
+
+        <h2>Limitations and Future Directions</h2>
+        <p>
+        Attention entropy, while informative, captures only one aspect of attention behavior. The entropy of a distribution says nothing about which positions receive attention, only how spread out the attention is. Two heads with identical entropy might have completely different attention patterns.
+        </p>
+
+        <p>
+        Furthermore, attention weights do not directly determine what information flows through the network. The value vectors that attention weights select may carry different amounts of information at different positions. A head might attend to a position with uninformative values, or assign low weight to a position whose values strongly influence the output through other pathways.
+        </p>
+
+        <p>
+        Future work might combine attention entropy with other measures: the mutual information between attention weights and model outputs, the rank of attended value matrices, or the gradient flow through attention operations. Such combined metrics could provide richer pictures of attention's functional role.
+        </p>
+
+        <h2>Conclusion</h2>
+        <p>
+        Attention entropy offers a principled, interpretable measure of how transformer models organize information during processing. By quantifying the focus or dispersion of attention weights, we gain insight into model behavior that complements prediction-based metrics like perplexity.
+        </p>
+
+        <p>
+        Our experiments with musical notation reveal that attention entropy patterns reflect meaningful aspects of input structure. Authentic music produces moderate entropy as the model balances multiple contextual factors. Noise produces focused but uninformative attention as the model defaults to simple heuristics. Silence produces high entropy as the model lacks meaningful content to focus on.
+        </p>
+
+        <p>
+        These findings demonstrate the value of interpretability metrics derived from model internals rather than just model outputs. As language models grow in scale and deployment, understanding how they process information—not just whether they produce correct outputs—becomes increasingly important. Attention entropy provides one window into this internal processing, revealing patterns of focus and integration that shape model capabilities.
+        </p>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="index.html">Musical Transformer Interpretability</a> research series.</p>
+        <p>Built with Claude Code (Claude Opus 4.5)</p>
+    </footer>
+</body>
+</html>

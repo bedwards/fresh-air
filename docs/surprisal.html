@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprisal: Information-Theoretic Analysis of Sequential Prediction</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #333;
+            --bg-color: #fafafa;
+            --card-bg: #fff;
+            --border-color: #e1e1e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.9;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            color: var(--primary-color);
+            margin-top: 3rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+        }
+
+        .metadata {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 2rem;
+            padding: 1.2rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .metadata span {
+            display: inline-block;
+            margin: 0 1rem 0.3rem 0;
+        }
+
+        .figure {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .figure-caption {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        .metric-highlight {
+            background-color: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid var(--secondary-color);
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .formula {
+            background-color: #f0f4f8;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+        }
+
+        .back-link {
+            margin-bottom: 2rem;
+        }
+
+        .back-link a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .metadata span {
+                display: block;
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .section-break {
+            text-align: center;
+            margin: 3rem 0;
+            color: #ccc;
+        }
+
+        .bits-table {
+            margin: 1.5rem auto;
+            max-width: 400px;
+        }
+
+        .bits-table td:first-child {
+            text-align: right;
+            padding-right: 1.5rem;
+        }
+
+        .bits-table td:last-child {
+            text-align: left;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-link">
+        <a href="index.html">&larr; Back to Essays</a>
+    </div>
+
+    <header>
+        <h1>Surprisal: Information-Theoretic Analysis of Sequential Prediction</h1>
+        <div class="metadata">
+            <span><strong>Author:</strong> Brian Edwards</span>
+            <span><strong>Date:</strong> January 21, 2026</span>
+            <span><strong>Reading Time:</strong> 22 minutes</span>
+            <br>
+            <span><strong>Series:</strong> Musical Transformer Interpretability</span>
+        </div>
+    </header>
+
+    <main>
+        <h2>Introduction</h2>
+        <p>
+        In 1948, Claude Shannon published "A Mathematical Theory of Communication," establishing the field of information theory. Among his fundamental concepts was the idea that the information content of an event is inversely related to its probability. When something surprising happens—something we didn't expect—it carries more information than when something routine occurs.
+        </p>
+
+        <p>
+        Shannon called this quantity self-information, but in modern machine learning, we typically call it <em>surprisal</em>. For language models, surprisal measures how unexpected each token is given the preceding context. It provides a token-by-token view of model understanding that complements aggregate metrics like perplexity.
+        </p>
+
+        <div class="figure">
+            <img src="images/surprisal/surprisal_concept.png" alt="Surprisal as information content">
+            <p class="figure-caption">Figure 1: Surprisal measures the information content of events—rare, unexpected occurrences carry more information than common, predictable ones.</p>
+        </div>
+
+        <h2>The Mathematics of Surprisal</h2>
+        <p>
+        Surprisal is defined as the negative logarithm of probability:
+        </p>
+
+        <div class="formula">
+            Surprisal(token) = -log<sub>2</sub> P(token | context)
+        </div>
+
+        <p>
+        The base-2 logarithm gives surprisal in units of <em>bits</em>—the fundamental unit of information. This choice connects surprisal to data compression: the minimum number of bits needed to encode a token is bounded by its surprisal.
+        </p>
+
+        <div class="figure">
+            <img src="images/surprisal/surprisal_bits.png" alt="Surprisal measured in bits">
+            <p class="figure-caption">Figure 2: The logarithmic scale transforms probabilities into bits—a probability of 0.5 yields 1 bit, 0.25 yields 2 bits, and so on, doubling with each halving of probability.</p>
+        </div>
+
+        <h3>Probability to Bits</h3>
+        <p>
+        The relationship between probability and surprisal follows a logarithmic scale:
+        </p>
+
+        <table class="bits-table">
+            <tr><td>P = 1.0 (certain)</td><td>0 bits</td></tr>
+            <tr><td>P = 0.5</td><td>1 bit</td></tr>
+            <tr><td>P = 0.25</td><td>2 bits</td></tr>
+            <tr><td>P = 0.125</td><td>3 bits</td></tr>
+            <tr><td>P = 0.0625</td><td>4 bits</td></tr>
+            <tr><td>P = 0.001</td><td>~10 bits</td></tr>
+            <tr><td>P = 0.0001</td><td>~13 bits</td></tr>
+        </table>
+
+        <p>
+        Each additional bit of surprisal corresponds to halving the probability. A token with 5 bits of surprisal was assigned probability around 3%, while a token with 10 bits of surprisal was assigned probability around 0.1%. This logarithmic scaling makes surprisal more interpretable than raw probabilities when dealing with very confident or very uncertain predictions.
+        </p>
+
+        <h3>Relationship to Perplexity</h3>
+        <p>
+        Perplexity is simply the exponentiated average surprisal. If we compute surprisal for every token in a sequence and take the mean, exponentiating this value yields perplexity. The metrics are mathematically equivalent but serve different purposes: surprisal provides token-level granularity while perplexity summarizes overall performance.
+        </p>
+
+        <div class="formula">
+            Perplexity = 2<sup>mean(Surprisal)</sup>
+        </div>
+
+        <p>
+        A mean surprisal of 3 bits corresponds to perplexity of 8. A mean surprisal of 4 bits corresponds to perplexity of 16. This exponential relationship means that small changes in mean surprisal produce large changes in perplexity.
+        </p>
+
+        <h2>Experimental Results: Musical Surprisal</h2>
+        <p>
+        Analyzing surprisal patterns in our ABC notation corpus reveals how the model processes different types of musical content at the token level.
+        </p>
+
+        <div class="metric-highlight">
+            <strong>Mean Surprisal Results (bits):</strong><br>
+            Silence: 2.21 (range: 1.90 - 2.49) — Lowest<br>
+            Traditional Irish: 2.44 (range: 1.19 - 3.39)<br>
+            Terrible Music: 2.48 (range: 2.20 - 2.99)<br>
+            Experimental: 3.59 (range: 3.53 - 3.65)<br>
+            Avant-garde: 4.05 (range: 3.84 - 4.22)<br>
+            Noise: 4.18 (range: 4.04 - 4.40) — Highest
+        </div>
+
+        <p>
+        The ordering follows intuition: predictable content (silence, authentic music) shows low surprisal, while unpredictable content (noise, avant-garde) shows high surprisal. But the specific values and variations reveal more nuanced patterns.
+        </p>
+
+        <div class="figure">
+            <img src="images/surprisal/surprisal_timeline.png" alt="Surprisal over sequence time">
+            <p class="figure-caption">Figure 3: Surprisal varies through a sequence—spikes indicate unexpected tokens that carry high information content, while valleys show predictable regions.</p>
+        </div>
+
+        <h3>The Silence Baseline</h3>
+        <p>
+        Silence sequences achieve mean surprisal of 2.21 bits, establishing a rough lower bound for structured ABC notation. This doesn't mean rest tokens are assigned probability near 1—remember that ABC files include structural elements beyond just notes. A mean surprisal of 2.21 bits corresponds to an average probability of about 22% per token.
+        </p>
+
+        <p>
+        Why not lower? Even in silence, the model must predict bar lines, meter changes, and the sequence's end. These structural decisions carry genuine uncertainty. The silence baseline reveals the irreducible surprisal inherent in ABC notation's format overhead.
+        </p>
+
+        <h3>Traditional Music: Variable Surprisal</h3>
+        <p>
+        Traditional Irish music shows the widest surprisal range (1.19 to 3.39 bits), reflecting the diversity of musical content. Some passages are highly predictable: repeated phrases, common chord progressions, conventional endings. Others surprise the model: ornaments, modulations, unusual melodic turns.
+        </p>
+
+        <p>
+        The minimum surprisal of 1.19 bits comes from a particularly formulaic tune—one whose structure the model has essentially memorized. The maximum of 3.39 bits comes from a tune with unusual ornamentation and an unexpected melodic contour. This variation demonstrates that "traditional" encompasses substantial complexity.
+        </p>
+
+        <h3>Noise: The Surprisal Ceiling</h3>
+        <p>
+        Random noise achieves mean surprisal of 4.18 bits, with peaks over 4.4 bits. This represents approximately what we'd expect from a model falling back on marginal character distributions without exploiting sequential structure.
+        </p>
+
+        <p>
+        Interestingly, the noise ceiling is not as high as it could be. If the model truly assigned uniform probability across all valid tokens (around 50+ characters), mean surprisal would exceed 5 bits. The lower observed value suggests the model has learned the marginal frequency distribution of ABC notation characters, even when it cannot predict their sequential arrangement.
+        </p>
+
+        <h2>Token-Level Analysis</h2>
+        <p>
+        Aggregate statistics mask important token-level patterns. Examining where surprisal spikes and falls reveals what the model has and hasn't learned about musical structure.
+        </p>
+
+        <h3>High-Surprisal Tokens</h3>
+        <p>
+        Across all categories, certain token types consistently produce elevated surprisal:
+        </p>
+
+        <ul>
+            <li><strong>Key signature indicators:</strong> Tokens like "K:G" or "K:Dmix" often produce surprisal spikes. The model struggles to predict key changes from melodic context alone.</li>
+            <li><strong>Ornament markers:</strong> Trills, rolls, and other decorations (~, T, etc.) show high variability. Ornamentation is stylistically optional, making it inherently unpredictable.</li>
+            <li><strong>First notes of phrases:</strong> The token immediately following a bar line or section marker typically has elevated surprisal. The model recognizes boundaries but cannot predict phrase beginnings.</li>
+            <li><strong>Accidentals:</strong> Notes with sharps or flats outside the key signature produce consistent surprisal spikes—the model hasn't fully learned when chromaticism is musically appropriate.</li>
+        </ul>
+
+        <h3>Low-Surprisal Tokens</h3>
+        <p>
+        Other tokens are highly predictable:
+        </p>
+
+        <ul>
+            <li><strong>Note duration markers:</strong> After a note pitch, duration numbers (2, 4, 8) are often well-predicted based on the established rhythmic pattern.</li>
+            <li><strong>Repeated passages:</strong> When a phrase repeats, the model predicts subsequent tokens with high confidence—sometimes near-zero surprisal.</li>
+            <li><strong>Structural syntax:</strong> Bar lines (|), repeat markers (:|, |:), and header elements follow strict patterns that the model learns thoroughly.</li>
+            <li><strong>Melodic inertia:</strong> In stepwise passages, the next note is often predictable from the current one. Scales and arpeggios show particularly low surprisal.</li>
+        </ul>
+
+        <div class="figure">
+            <img src="images/surprisal/surprisal_music.png" alt="Musical surprisal patterns">
+            <p class="figure-caption">Figure 4: Musical surprisal—common progressions flow smoothly while unexpected harmonies and sudden changes create surprisal peaks, much as they might surprise a human listener.</p>
+        </div>
+
+        <h2>Surprisal and Musical Expectation</h2>
+        <p>
+        Music theorists have long studied how music creates and resolves expectations. A tonic chord feels stable; a dominant seventh chord creates tension that demands resolution. Unexpected harmonies surprise us; familiar progressions feel inevitable in retrospect.
+        </p>
+
+        <p>
+        Does model surprisal align with musical expectations? The question is fascinating because it probes whether statistical language patterns capture musically meaningful structure.
+        </p>
+
+        <h3>Convergences</h3>
+        <p>
+        In several ways, model surprisal does align with musical intuition:
+        </p>
+
+        <ul>
+            <li><strong>Cadential patterns:</strong> The approach to phrase endings—particularly the classic dominant-to-tonic motion—shows decreasing surprisal. The model has learned that certain notes inevitably follow certain contexts.</li>
+            <li><strong>Repetition effects:</strong> Repeated melodic material produces lower surprisal on subsequent occurrences. This mirrors how human listeners perceive repetition as providing cognitive ease.</li>
+            <li><strong>Modal consistency:</strong> Notes within the established mode produce lower surprisal than notes outside it. The model tracks key and penalizes deviations, similar to how human listeners perceive out-of-key notes as surprising.</li>
+        </ul>
+
+        <h3>Divergences</h3>
+        <p>
+        But model surprisal also diverges from musical expectation in revealing ways:
+        </p>
+
+        <ul>
+            <li><strong>Expressive deviations:</strong> Musicians intentionally surprise listeners—an unexpected note that creates emotion, a rule broken for effect. The model assigns high surprisal to these moments without recognizing their artistic function.</li>
+            <li><strong>Long-range structure:</strong> Human listeners track large-scale form: verse, chorus, bridge, return. The model's surprisal shows little sensitivity to these macro-structures, treating each local passage independently.</li>
+            <li><strong>Cultural context:</strong> What surprises a listener depends on their musical experience. A blues flat-seventh sounds natural to blues listeners but strange in classical context. The model has learned an average over its training data, not a culturally-situated perspective.</li>
+        </ul>
+
+        <h2>Surprisal in Psycholinguistics</h2>
+        <p>
+        The parallel between model surprisal and human cognition extends beyond music. Psycholinguistic research has established strong correlations between word surprisal and human reading behavior.
+        </p>
+
+        <p>
+        Eye-tracking studies show that readers fixate longer on high-surprisal words—words that are unexpected given context. Self-paced reading shows slower reading times for surprising words. ERP (event-related potential) studies show distinctive brain responses to high-surprisal words, particularly the N400 component associated with semantic processing difficulty.
+        </p>
+
+        <blockquote>
+        "The surprisal of a word is a strong predictor of how long people look at it during reading. This suggests that surprisal captures something fundamental about the cognitive effort of language comprehension."
+        </blockquote>
+
+        <p>
+        These findings suggest that surprisal measures something psychologically real—not just statistical regularity, but actual processing difficulty. Whether this correspondence extends to music is an open question, but the psycholinguistic evidence provides grounds for optimism.
+        </p>
+
+        <h2>Applications of Surprisal Analysis</h2>
+
+        <h3>Content Classification</h3>
+        <p>
+        Surprisal patterns can distinguish content types even when surface features are similar. Our experiments show that authentic traditional music, deliberately bad music, and random noise all produce ABC notation that looks superficially similar, but their surprisal profiles differ systematically.
+        </p>
+
+        <p>
+        A classifier based on surprisal statistics (mean, variance, maximum, specific token patterns) could potentially categorize music by style, quality, or authenticity. Such a classifier would leverage the model's learned understanding rather than hand-crafted features.
+        </p>
+
+        <h3>Anomaly Detection</h3>
+        <p>
+        Sequences with unusually high surprisal may indicate errors, corruptions, or out-of-distribution content. In practical applications, monitoring surprisal provides a content-agnostic signal that something unexpected is happening.
+        </p>
+
+        <p>
+        For music processing, this could flag transcription errors (notes that don't match the audio), notation mistakes (syntactically valid but musically implausible sequences), or creative novelty (genuinely new musical ideas that the model hasn't encountered).
+        </p>
+
+        <h3>Creative Assistance</h3>
+        <p>
+        Artists might use surprisal as a creativity tool. Displaying surprisal values alongside generated or composed music could help identify passages that are too predictable (low surprisal—potentially boring) or too chaotic (high surprisal—potentially incoherent).
+        </p>
+
+        <p>
+        The sweet spot for creative music might lie in moderate surprisal—predictable enough to feel structured but surprising enough to feel novel. Such guidance, derived from statistical models, could complement human musical judgment.
+        </p>
+
+        <h2>Information-Theoretic Interpretation</h2>
+        <p>
+        Surprisal connects to deep questions about the nature of information and meaning.
+        </p>
+
+        <h3>Compression and Understanding</h3>
+        <p>
+        Shannon's original insight was that efficient communication requires matching code lengths to message probabilities. Common messages should have short codes; rare messages can have longer codes. The expected code length is bounded below by entropy—the average surprisal.
+        </p>
+
+        <p>
+        A model with low mean surprisal has learned to compress the data well. It has extracted regularities that allow efficient encoding. In this sense, understanding and compression are deeply related: to predict well is to compress well, and both require modeling the true structure of the data.
+        </p>
+
+        <p>
+        But compression isn't everything. A model might achieve low surprisal through memorization—storing training examples verbatim rather than extracting generalizable patterns. Distinguishing memorization from understanding requires evaluating generalization: does the model achieve low surprisal on new data from the same distribution?
+        </p>
+
+        <h3>The Role of Context</h3>
+        <p>
+        Surprisal is defined relative to context. The surprisal of a token depends on everything that came before it. This contextual dependence means that surprisal measures not just how common a token is in general, but how expected it is given the specific preceding sequence.
+        </p>
+
+        <p>
+        This contextual nature is precisely what makes surprisal valuable for understanding model behavior. We care not just whether a model knows that D is a common note, but whether it knows when D is appropriate—after a C in a rising scale, before an E in a familiar phrase, at the start of a new section.
+        </p>
+
+        <h2>Limitations and Considerations</h2>
+
+        <h3>Tokenization Effects</h3>
+        <p>
+        Surprisal is measured per token, but tokenization is a modeling choice that affects results. Different tokenization schemes produce different surprisal distributions even for the same underlying content. Character-level models produce many tokens with potentially lower individual surprisal; word-level models produce fewer tokens with potentially higher surprisal.
+        </p>
+
+        <p>
+        For ABC notation, which has its own syntax distinct from natural language, tokenization is particularly important. Should note symbols be individual tokens, or should pitch and duration be separate? The answer affects surprisal patterns and their interpretation.
+        </p>
+
+        <h3>Model Miscalibration</h3>
+        <p>
+        Surprisal assumes that model probabilities are calibrated—that when the model assigns probability 0.3, the true probability really is around 0.3. In practice, neural networks are often miscalibrated, especially in distributional tails.
+        </p>
+
+        <p>
+        Overconfident models assign too-low probabilities to rare events, producing artificially high surprisal when those events occur. Underconfident models spread probability too broadly, producing artificially low surprisal. Interpreting surprisal requires considering these calibration issues.
+        </p>
+
+        <h3>The Problem of Rare Events</h3>
+        <p>
+        Very rare tokens can produce extremely high surprisal—potentially 20+ bits for tokens the model barely considers possible. A single such token can dominate aggregate statistics, making mean surprisal unstable.
+        </p>
+
+        <p>
+        Robust statistics (median, trimmed mean) or surprisal caps can address this issue, but they introduce arbitrary choices. There's no perfect solution; practitioners must balance sensitivity to rare events against stability of estimates.
+        </p>
+
+        <h2>Conclusion</h2>
+        <p>
+        Surprisal provides a principled, information-theoretic lens for understanding how language models process sequential data. By measuring the negative log probability of each token, we quantify exactly how unexpected each observation is given the model's learned understanding of context.
+        </p>
+
+        <p>
+        In our musical experiments, surprisal reveals graduated levels of comprehension. The model finds silence nearly predictable, traditional music moderately surprising, and random noise highly unexpected. Token-level analysis shows specific patterns: ornaments surprise the model, repetitions don't, key signatures are difficult, note durations are easy.
+        </p>
+
+        <p>
+        These patterns illuminate both what the model has learned and what it hasn't. It has learned ABC notation syntax and local statistical patterns. It has learned something about melodic continuity and rhythmic consistency. But it struggles with ornamentation, key relationships, and phrase-level structure—precisely the elements that require deeper musical understanding.
+        </p>
+
+        <p>
+        Surprisal thus serves as a probe into model cognition, revealing the landscape of understanding through the topography of expectation. Where surprisal is low, the model knows what's coming. Where surprisal is high, the model is learning something new—or encountering something it cannot learn. Mapping this landscape is essential work for understanding what these remarkable systems actually comprehend.
+        </p>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="index.html">Musical Transformer Interpretability</a> research series.</p>
+        <p>Built with Claude Code (Claude Opus 4.5)</p>
+    </footer>
+</body>
+</html>
