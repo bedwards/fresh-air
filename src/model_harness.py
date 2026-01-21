@@ -1,47 +1,64 @@
 #!/usr/bin/env python3
 """Phi-4 model harness for transformer interpretability analysis.
 
-This module provides a wrapper around Phi-4 14B (via Ollama) to extract
+This module provides a wrapper around Phi-4 14B (via Ollama or transformers) to extract
 interpretability metrics from ABC notation music files.
 
 Metrics computed:
     - Perplexity (overall and per-token) via continuation probabilities
     - Per-token surprisal
     - High surprisal token identification
-    - Attention entropy (limited via Ollama API, documented placeholders)
-    - Layer-wise activation statistics (requires direct model access)
+    - Attention entropy (per-layer, per-head) via transformers
+    - Layer-wise activation statistics (L2 norms, means, variances)
+    - Head specialization detection (positional vs content heads)
 
 Usage:
     python src/model_harness.py data/abc_files/traditional_001.abc
     python src/model_harness.py --all data/abc_files/
+    python src/model_harness.py data/abc_files/traditional_001.abc --use-transformers
 
-Note: This implementation uses the Ollama API which provides log probabilities
-for generated tokens. For the most accurate perplexity of input text, direct
-model access via transformers would be preferred, but Ollama provides a
-practical approximation through continuation-based evaluation.
+Note: This implementation supports both Ollama API (for basic metrics) and
+direct transformers access (for full attention and hidden state analysis).
+Use --use-transformers flag for full interpretability metrics.
 """
 
 import argparse
+import gc
 import json
 import math
 import re
 import sys
 import time
-from dataclasses import dataclass, asdict
+import warnings
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import requests
 
+# Optional imports for transformers-based inference
+try:
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+    torch = None
+
 
 OLLAMA_URL = "http://localhost:11434"
 MODEL_NAME = "phi4:14b"
+TRANSFORMERS_MODEL_NAME = "microsoft/phi-4"
 
 # Configuration for analysis
 CHUNK_SIZE = 50  # Characters per chunk for sliding window analysis
 OVERLAP = 10     # Overlap between chunks
 HIGH_SURPRISAL_THRESHOLD = 10.0  # bits
+
+# Head specialization thresholds
+POSITIONAL_HEAD_THRESHOLD = 0.5  # Attention mass on fixed positions
+CONTENT_HEAD_ENTROPY_THRESHOLD = 2.0  # High entropy indicates content-based attention
 
 
 @dataclass
@@ -55,16 +72,30 @@ class PerplexityMetrics:
 
 
 @dataclass
+class HeadSpecialization:
+    """Classification of attention head specialization."""
+    layer: int
+    head: int
+    head_type: str  # "positional", "content", or "mixed"
+    bos_attention: float  # Attention weight to BOS token
+    recent_attention: float  # Attention to recent tokens (last 5)
+    entropy: float  # Entropy of attention distribution
+    confidence: float  # Confidence in classification
+
+
+@dataclass
 class AttentionMetrics:
     """Attention-related metrics.
 
-    Note: Ollama API does not expose attention weights directly.
-    These are placeholder values with documentation about limitations.
+    When using transformers: Contains full attention entropy per layer and head.
+    When using Ollama: Contains placeholder values with documentation.
     """
     mean_entropy: float | None
-    per_layer: list[float] | None
-    per_head: list[list[float]] | None  # [layer][head]
-    high_entropy_heads: list[dict]
+    per_layer: list[float] | None  # Mean entropy per layer
+    per_head: list[list[float]] | None  # [layer][head] entropy values
+    high_entropy_heads: list[dict]  # Heads with high entropy
+    low_entropy_heads: list[dict]  # Heads with low entropy (focused attention)
+    head_specializations: list[dict] | None  # Head type classifications
     note: str
 
 
@@ -80,11 +111,17 @@ class SurprisalMetrics:
 class ActivationMetrics:
     """Hidden state activation metrics.
 
-    Note: Ollama API does not expose internal activations.
-    These require direct model access via transformers library.
+    When using transformers: Contains full hidden state statistics per layer.
+    When using Ollama: Contains placeholder values with documentation.
     """
-    per_layer_norm: list[float] | None
-    variance_per_layer: list[float] | None
+    per_layer_l2_norm: list[float] | None  # L2 norm per layer
+    per_layer_mean: list[float] | None  # Mean activation per layer
+    per_layer_variance: list[float] | None  # Variance per layer
+    per_layer_max: list[float] | None  # Max activation per layer
+    per_layer_min: list[float] | None  # Min activation per layer
+    embedding_norm: float | None  # L2 norm of embedding layer
+    final_layer_norm: float | None  # L2 norm of final layer
+    norm_growth_rate: float | None  # How norms change across layers
     note: str
 
 
@@ -204,6 +241,441 @@ class OllamaClient:
             text
         )
         return tokens
+
+
+class TransformersClient:
+    """Client for direct model access via transformers library.
+
+    This provides full access to attention weights and hidden states
+    for interpretability analysis.
+    """
+
+    def __init__(self, model_name: str = TRANSFORMERS_MODEL_NAME, device: str = None):
+        """Initialize the transformers client.
+
+        Args:
+            model_name: HuggingFace model name
+            device: Device to use ('cuda', 'mps', 'cpu', or 'auto')
+        """
+        if not TRANSFORMERS_AVAILABLE:
+            raise RuntimeError(
+                "transformers and torch are required for TransformersClient. "
+                "Install with: pip install transformers torch"
+            )
+
+        self.model_name = model_name
+        self.model = None
+        self.tokenizer = None
+        self._device = device
+
+    def _get_device(self) -> str:
+        """Determine the best available device."""
+        if self._device and self._device != "auto":
+            return self._device
+
+        if torch.cuda.is_available():
+            return "cuda"
+        elif torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+
+    def load_model(self) -> bool:
+        """Load the model and tokenizer.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if self.model is not None:
+            return True
+
+        try:
+            print(f"Loading model {self.model_name}...")
+            print(f"Using device: {self._get_device()}")
+
+            # Load tokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name,
+                trust_remote_code=True
+            )
+
+            # Determine device configuration
+            device = self._get_device()
+
+            # Load model with memory-efficient settings
+            model_kwargs = {
+                "trust_remote_code": True,
+                "output_attentions": True,
+                "output_hidden_states": True,
+            }
+
+            # Use float16 for memory efficiency
+            if device in ("cuda", "mps"):
+                model_kwargs["torch_dtype"] = torch.float16
+
+            # For CPU or single GPU, load directly
+            if device == "cpu":
+                model_kwargs["torch_dtype"] = torch.float32
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_name,
+                    **model_kwargs
+                )
+            else:
+                # Try to load with device_map for automatic distribution
+                try:
+                    model_kwargs["device_map"] = "auto"
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        self.model_name,
+                        **model_kwargs
+                    )
+                except Exception as e:
+                    print(f"Warning: device_map='auto' failed: {e}")
+                    print("Trying direct device placement...")
+                    del model_kwargs["device_map"]
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        self.model_name,
+                        **model_kwargs
+                    ).to(device)
+
+            self.model.eval()
+            print(f"Model loaded successfully")
+            return True
+
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            self.model = None
+            self.tokenizer = None
+            return False
+
+    def unload_model(self):
+        """Unload the model to free memory."""
+        if self.model is not None:
+            del self.model
+            self.model = None
+        if self.tokenizer is not None:
+            del self.tokenizer
+            self.tokenizer = None
+
+        # Force garbage collection
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    def analyze_text(self, text: str) -> dict[str, Any]:
+        """Analyze text and return attention weights and hidden states.
+
+        Args:
+            text: Input text to analyze
+
+        Returns:
+            Dict with 'attentions', 'hidden_states', 'logits', 'tokens', 'log_probs'
+        """
+        if self.model is None:
+            if not self.load_model():
+                raise RuntimeError("Failed to load model")
+
+        # Tokenize input
+        inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            max_length=2048  # Limit sequence length for memory
+        )
+
+        # Move inputs to model device
+        device = next(self.model.parameters()).device
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+
+        # Get tokens as strings for analysis
+        token_ids = inputs["input_ids"][0].tolist()
+        tokens = [self.tokenizer.decode([tid]) for tid in token_ids]
+
+        # Run forward pass with no gradient computation
+        with torch.no_grad():
+            outputs = self.model(
+                **inputs,
+                output_attentions=True,
+                output_hidden_states=True,
+                return_dict=True
+            )
+
+        # Compute log probabilities for each token
+        # Shift logits and labels for causal LM
+        logits = outputs.logits[0]  # (seq_len, vocab_size)
+        log_probs = []
+
+        if logits.shape[0] > 1:
+            # Compute log softmax over vocabulary
+            log_softmax = torch.nn.functional.log_softmax(logits[:-1], dim=-1)
+            # Get log prob of actual next tokens
+            for i, next_token_id in enumerate(token_ids[1:]):
+                lp = log_softmax[i, next_token_id].item()
+                log_probs.append(lp)
+
+        return {
+            "attentions": outputs.attentions,  # Tuple of (batch, num_heads, seq_len, seq_len)
+            "hidden_states": outputs.hidden_states,  # Tuple of (batch, seq_len, hidden_dim)
+            "logits": outputs.logits,
+            "tokens": tokens,
+            "token_ids": token_ids,
+            "log_probs": log_probs
+        }
+
+
+def compute_attention_entropy(attentions: tuple) -> AttentionMetrics:
+    """Compute attention entropy metrics from transformer attention weights.
+
+    Entropy H = -sum(p * log(p)) measures how distributed attention is.
+    - High entropy: attention spread across many positions
+    - Low entropy: attention focused on few positions
+
+    Args:
+        attentions: Tuple of attention tensors, one per layer
+                   Each tensor has shape (batch, num_heads, seq_len, seq_len)
+
+    Returns:
+        AttentionMetrics with per-layer and per-head entropy values
+    """
+    if attentions is None or len(attentions) == 0:
+        return AttentionMetrics(
+            mean_entropy=None,
+            per_layer=None,
+            per_head=None,
+            high_entropy_heads=[],
+            low_entropy_heads=[],
+            head_specializations=None,
+            note="No attention data available"
+        )
+
+    per_layer_entropy = []
+    per_head_entropy = []
+    all_entropies = []
+    high_entropy_heads = []
+    low_entropy_heads = []
+    head_specializations = []
+
+    # Small epsilon for numerical stability
+    eps = 1e-10
+
+    for layer_idx, layer_attention in enumerate(attentions):
+        # layer_attention: (batch, num_heads, seq_len, seq_len)
+        # Take first batch element
+        attn = layer_attention[0]  # (num_heads, seq_len, seq_len)
+        num_heads = attn.shape[0]
+        seq_len = attn.shape[1]
+
+        layer_head_entropies = []
+
+        for head_idx in range(num_heads):
+            # Get attention weights for this head
+            head_attn = attn[head_idx]  # (seq_len, seq_len)
+
+            # Compute entropy for each query position, then average
+            # Clamp to avoid log(0)
+            head_attn_clamped = torch.clamp(head_attn, min=eps)
+            entropy_per_position = -torch.sum(
+                head_attn_clamped * torch.log(head_attn_clamped),
+                dim=-1
+            )  # (seq_len,)
+
+            # Convert to bits and average over positions
+            mean_entropy = (entropy_per_position.mean().item() / math.log(2))
+            layer_head_entropies.append(round(mean_entropy, 4))
+            all_entropies.append(mean_entropy)
+
+            # Detect head specialization
+            spec = _detect_head_specialization(
+                head_attn, layer_idx, head_idx, mean_entropy
+            )
+            head_specializations.append(asdict(spec))
+
+            # Track high/low entropy heads
+            max_possible_entropy = math.log2(seq_len) if seq_len > 1 else 1.0
+            entropy_ratio = mean_entropy / max_possible_entropy if max_possible_entropy > 0 else 0
+
+            if entropy_ratio > 0.8:  # Very distributed attention
+                high_entropy_heads.append({
+                    "layer": layer_idx,
+                    "head": head_idx,
+                    "entropy": round(mean_entropy, 4),
+                    "entropy_ratio": round(entropy_ratio, 4)
+                })
+            elif entropy_ratio < 0.3:  # Very focused attention
+                low_entropy_heads.append({
+                    "layer": layer_idx,
+                    "head": head_idx,
+                    "entropy": round(mean_entropy, 4),
+                    "entropy_ratio": round(entropy_ratio, 4)
+                })
+
+        per_head_entropy.append(layer_head_entropies)
+        per_layer_entropy.append(round(sum(layer_head_entropies) / len(layer_head_entropies), 4))
+
+    mean_entropy = sum(all_entropies) / len(all_entropies) if all_entropies else None
+
+    return AttentionMetrics(
+        mean_entropy=round(mean_entropy, 4) if mean_entropy else None,
+        per_layer=per_layer_entropy,
+        per_head=per_head_entropy,
+        high_entropy_heads=high_entropy_heads[:10],  # Limit to top 10
+        low_entropy_heads=low_entropy_heads[:10],
+        head_specializations=head_specializations,
+        note="Computed from transformers attention weights"
+    )
+
+
+def _detect_head_specialization(
+    head_attn: "torch.Tensor",
+    layer_idx: int,
+    head_idx: int,
+    entropy: float
+) -> HeadSpecialization:
+    """Detect whether an attention head is positional or content-based.
+
+    Positional heads: Focus on fixed positions (BOS, recent tokens)
+    Content heads: Attention pattern varies based on token content
+
+    Args:
+        head_attn: Attention weights for single head (seq_len, seq_len)
+        layer_idx: Layer index
+        head_idx: Head index
+        entropy: Pre-computed entropy for this head
+
+    Returns:
+        HeadSpecialization classification
+    """
+    seq_len = head_attn.shape[0]
+
+    # Compute attention to BOS token (position 0)
+    # Average across all query positions
+    bos_attention = head_attn[:, 0].mean().item()
+
+    # Compute attention to recent tokens (last 5 positions relative to each query)
+    # This requires looking at the causal mask pattern
+    recent_attention = 0.0
+    recent_window = min(5, seq_len)
+
+    for q_pos in range(seq_len):
+        # For this query, what fraction of attention goes to recent tokens?
+        start_pos = max(0, q_pos - recent_window + 1)
+        if q_pos >= start_pos:
+            recent_attn_slice = head_attn[q_pos, start_pos:q_pos + 1]
+            recent_attention += recent_attn_slice.sum().item()
+
+    recent_attention /= seq_len  # Average across query positions
+
+    # Classify head type
+    if bos_attention > POSITIONAL_HEAD_THRESHOLD:
+        head_type = "positional_bos"
+        confidence = min(bos_attention / POSITIONAL_HEAD_THRESHOLD, 1.0)
+    elif recent_attention > POSITIONAL_HEAD_THRESHOLD:
+        head_type = "positional_recent"
+        confidence = min(recent_attention / POSITIONAL_HEAD_THRESHOLD, 1.0)
+    elif entropy > CONTENT_HEAD_ENTROPY_THRESHOLD:
+        head_type = "content"
+        confidence = min(entropy / CONTENT_HEAD_ENTROPY_THRESHOLD, 1.0)
+    else:
+        head_type = "mixed"
+        confidence = 0.5
+
+    return HeadSpecialization(
+        layer=layer_idx,
+        head=head_idx,
+        head_type=head_type,
+        bos_attention=round(bos_attention, 4),
+        recent_attention=round(recent_attention, 4),
+        entropy=round(entropy, 4),
+        confidence=round(confidence, 4)
+    )
+
+
+def compute_hidden_state_stats(hidden_states: tuple) -> ActivationMetrics:
+    """Compute hidden state statistics from transformer hidden states.
+
+    Computes per-layer:
+    - L2 norm: Overall magnitude of activations
+    - Mean: Average activation value
+    - Variance: Spread of activation values
+    - Min/Max: Extreme values
+
+    Args:
+        hidden_states: Tuple of hidden state tensors, one per layer
+                      Each tensor has shape (batch, seq_len, hidden_dim)
+
+    Returns:
+        ActivationMetrics with per-layer statistics
+    """
+    if hidden_states is None or len(hidden_states) == 0:
+        return ActivationMetrics(
+            per_layer_l2_norm=None,
+            per_layer_mean=None,
+            per_layer_variance=None,
+            per_layer_max=None,
+            per_layer_min=None,
+            embedding_norm=None,
+            final_layer_norm=None,
+            norm_growth_rate=None,
+            note="No hidden state data available"
+        )
+
+    per_layer_l2_norm = []
+    per_layer_mean = []
+    per_layer_variance = []
+    per_layer_max = []
+    per_layer_min = []
+
+    for layer_idx, layer_hidden in enumerate(hidden_states):
+        # layer_hidden: (batch, seq_len, hidden_dim)
+        # Take first batch element and flatten sequence
+        hidden = layer_hidden[0]  # (seq_len, hidden_dim)
+
+        # Compute L2 norm (average across sequence positions)
+        l2_norms = torch.norm(hidden, dim=-1)  # (seq_len,)
+        mean_l2_norm = l2_norms.mean().item()
+        per_layer_l2_norm.append(round(mean_l2_norm, 4))
+
+        # Compute mean activation
+        mean_val = hidden.mean().item()
+        per_layer_mean.append(round(mean_val, 6))
+
+        # Compute variance
+        var_val = hidden.var().item()
+        per_layer_variance.append(round(var_val, 6))
+
+        # Compute min/max
+        per_layer_max.append(round(hidden.max().item(), 4))
+        per_layer_min.append(round(hidden.min().item(), 4))
+
+    # Compute norm growth rate (how L2 norm changes across layers)
+    embedding_norm = per_layer_l2_norm[0] if per_layer_l2_norm else None
+    final_layer_norm = per_layer_l2_norm[-1] if per_layer_l2_norm else None
+
+    norm_growth_rate = None
+    if embedding_norm and final_layer_norm and len(per_layer_l2_norm) > 1:
+        # Linear regression slope of norms
+        n = len(per_layer_l2_norm)
+        x_mean = (n - 1) / 2
+        y_mean = sum(per_layer_l2_norm) / n
+
+        numerator = sum(
+            (i - x_mean) * (norm - y_mean)
+            for i, norm in enumerate(per_layer_l2_norm)
+        )
+        denominator = sum((i - x_mean) ** 2 for i in range(n))
+
+        if denominator > 0:
+            norm_growth_rate = round(numerator / denominator, 6)
+
+    return ActivationMetrics(
+        per_layer_l2_norm=per_layer_l2_norm,
+        per_layer_mean=per_layer_mean,
+        per_layer_variance=per_layer_variance,
+        per_layer_max=per_layer_max,
+        per_layer_min=per_layer_min,
+        embedding_norm=embedding_norm,
+        final_layer_norm=final_layer_norm,
+        norm_growth_rate=norm_growth_rate,
+        note="Computed from transformers hidden states"
+    )
 
 
 def compute_log_probabilities_via_continuation(
@@ -434,22 +906,11 @@ def compute_surprisal(log_probs: list[float], tokens: list[str]) -> SurprisalMet
     )
 
 
-def compute_attention_metrics() -> AttentionMetrics:
-    """Compute attention-related metrics.
+def compute_attention_metrics_placeholder() -> AttentionMetrics:
+    """Return placeholder attention metrics when using Ollama API.
 
     LIMITATION: The Ollama API does not expose attention weights.
-    This function returns documented placeholders.
-
-    For full attention analysis, use the transformers library directly:
-    ```python
-    from transformers import AutoModelForCausalLM
-    model = AutoModelForCausalLM.from_pretrained(
-        "microsoft/phi-4",
-        output_attentions=True
-    )
-    outputs = model(input_ids, output_attentions=True)
-    attentions = outputs.attentions  # Tuple of attention tensors
-    ```
+    Use --use-transformers flag for full attention analysis.
 
     Returns:
         AttentionMetrics with note about limitations
@@ -459,45 +920,42 @@ def compute_attention_metrics() -> AttentionMetrics:
         per_layer=None,
         per_head=None,
         high_entropy_heads=[],
+        low_entropy_heads=[],
+        head_specializations=None,
         note="Attention weights not available via Ollama API. "
-             "Use transformers library with output_attentions=True "
-             "for direct model access to attention patterns."
+             "Use --use-transformers flag for full attention analysis."
     )
 
 
-def compute_activation_metrics() -> ActivationMetrics:
-    """Compute hidden state activation metrics.
+def compute_activation_metrics_placeholder() -> ActivationMetrics:
+    """Return placeholder activation metrics when using Ollama API.
 
     LIMITATION: The Ollama API does not expose internal activations.
-    This function returns documented placeholders.
-
-    For full activation analysis, use the transformers library:
-    ```python
-    from transformers import AutoModelForCausalLM
-    model = AutoModelForCausalLM.from_pretrained(
-        "microsoft/phi-4",
-        output_hidden_states=True
-    )
-    outputs = model(input_ids, output_hidden_states=True)
-    hidden_states = outputs.hidden_states  # Tuple of hidden state tensors
-    ```
+    Use --use-transformers flag for full hidden state analysis.
 
     Returns:
         ActivationMetrics with note about limitations
     """
     return ActivationMetrics(
-        per_layer_norm=None,
-        variance_per_layer=None,
+        per_layer_l2_norm=None,
+        per_layer_mean=None,
+        per_layer_variance=None,
+        per_layer_max=None,
+        per_layer_min=None,
+        embedding_norm=None,
+        final_layer_norm=None,
+        norm_growth_rate=None,
         note="Internal activations not available via Ollama API. "
-             "Use transformers library with output_hidden_states=True "
-             "for direct model access to layer activations."
+             "Use --use-transformers flag for full hidden state analysis."
     )
 
 
 def analyze_abc_file(
     abc_path: Path,
     client: OllamaClient | None = None,
-    baseline_stats: dict | None = None
+    baseline_stats: dict | None = None,
+    use_transformers: bool = False,
+    transformers_client: "TransformersClient | None" = None
 ) -> AnalysisResult:
     """Analyze a single ABC file and extract all metrics.
 
@@ -505,25 +963,63 @@ def analyze_abc_file(
         abc_path: Path to ABC notation file
         client: Optional OllamaClient instance (creates one if not provided)
         baseline_stats: Optional baseline statistics for comparison
+        use_transformers: If True, use transformers for full attention/hidden state analysis
+        transformers_client: Optional pre-loaded TransformersClient instance
 
     Returns:
         Complete analysis result
     """
-    if client is None:
-        client = OllamaClient()
-
     abc_content = abc_path.read_text(encoding='utf-8')
+    model_name = MODEL_NAME
 
-    # Get log probabilities via continuation analysis
-    log_probs, tokens = compute_log_probabilities_via_continuation(
-        client, abc_content
-    )
+    if use_transformers:
+        # Use transformers for full analysis
+        if not TRANSFORMERS_AVAILABLE:
+            raise RuntimeError(
+                "transformers and torch are required for --use-transformers. "
+                "Install with: pip install transformers torch"
+            )
 
-    # Compute all metrics
-    perplexity = compute_perplexity(log_probs)
-    surprisal = compute_surprisal(log_probs, tokens)
-    attention = compute_attention_metrics()
-    activations = compute_activation_metrics()
+        if transformers_client is None:
+            transformers_client = TransformersClient()
+
+        try:
+            # Run transformers analysis
+            analysis = transformers_client.analyze_text(abc_content)
+
+            # Extract data
+            tokens = analysis["tokens"]
+            log_probs = analysis["log_probs"]
+            attentions = analysis["attentions"]
+            hidden_states = analysis["hidden_states"]
+            model_name = TRANSFORMERS_MODEL_NAME
+
+            # Compute metrics from transformers output
+            perplexity = compute_perplexity(log_probs)
+            surprisal = compute_surprisal(log_probs, tokens[1:])  # Skip first token (no log prob)
+            attention = compute_attention_entropy(attentions)
+            activations = compute_hidden_state_stats(hidden_states)
+
+        except Exception as e:
+            print(f"Warning: Transformers analysis failed: {e}")
+            print("Falling back to Ollama mode...")
+            use_transformers = False
+
+    if not use_transformers:
+        # Use Ollama for basic analysis
+        if client is None:
+            client = OllamaClient()
+
+        # Get log probabilities via continuation analysis
+        log_probs, tokens = compute_log_probabilities_via_continuation(
+            client, abc_content
+        )
+
+        # Compute basic metrics
+        perplexity = compute_perplexity(log_probs)
+        surprisal = compute_surprisal(log_probs, tokens)
+        attention = compute_attention_metrics_placeholder()
+        activations = compute_activation_metrics_placeholder()
 
     # Compute comparative metrics if baseline provided
     comparative = None
@@ -534,7 +1030,11 @@ def analyze_abc_file(
         ent_std = baseline_stats.get('entropy_std', 1.0)
 
         perplexity_zscore = (perplexity.overall - ppl_mean) / max(ppl_std, 0.001)
-        entropy_zscore = 0.0  # Cannot compute without attention data
+
+        # Compute entropy z-score if we have attention data
+        entropy_zscore = 0.0
+        if attention.mean_entropy is not None and ent_std > 0:
+            entropy_zscore = (attention.mean_entropy - ent_mean) / ent_std
 
         comparative = ComparativeMetrics(
             baseline="traditional_mean",
@@ -544,7 +1044,7 @@ def analyze_abc_file(
 
     return AnalysisResult(
         filename=abc_path.name,
-        model=MODEL_NAME,
+        model=model_name,
         timestamp=datetime.now().isoformat(),
         token_count=len(tokens),
         perplexity=perplexity,
@@ -581,7 +1081,8 @@ def save_metrics(result: AnalysisResult, output_dir: Path) -> Path:
 def analyze_corpus(
     input_dir: Path,
     output_dir: Path = Path("data/metrics"),
-    progress_callback: callable = None
+    progress_callback: callable = None,
+    use_transformers: bool = False
 ) -> list[AnalysisResult]:
     """Analyze all ABC files in a directory.
 
@@ -589,23 +1090,42 @@ def analyze_corpus(
         input_dir: Directory containing ABC files
         output_dir: Directory to save metrics
         progress_callback: Optional callback(current, total, filename)
+        use_transformers: If True, use transformers for full analysis
 
     Returns:
         List of analysis results
     """
     results = []
-    client = OllamaClient()
     abc_files = sorted(input_dir.glob("*.abc"))
-
     total = len(abc_files)
     print(f"Found {total} ABC files to analyze")
 
-    if not client.is_available():
-        print("Warning: Ollama server not available. Using estimation mode.")
-        print("Start Ollama with: ollama serve")
-    elif not client.is_model_available():
-        print(f"Warning: Model {MODEL_NAME} not available.")
-        print(f"Pull model with: ollama pull {MODEL_NAME}")
+    # Initialize the appropriate client
+    client = None
+    transformers_client = None
+
+    if use_transformers:
+        if not TRANSFORMERS_AVAILABLE:
+            print("Error: transformers not available. Install with: pip install transformers torch")
+            print("Falling back to Ollama mode.")
+            use_transformers = False
+        else:
+            print(f"Using transformers with model: {TRANSFORMERS_MODEL_NAME}")
+            transformers_client = TransformersClient()
+            # Pre-load model once for efficiency
+            if not transformers_client.load_model():
+                print("Warning: Failed to load transformers model. Falling back to Ollama.")
+                use_transformers = False
+                transformers_client = None
+
+    if not use_transformers:
+        client = OllamaClient()
+        if not client.is_available():
+            print("Warning: Ollama server not available. Using estimation mode.")
+            print("Start Ollama with: ollama serve")
+        elif not client.is_model_available():
+            print(f"Warning: Model {MODEL_NAME} not available.")
+            print(f"Pull model with: ollama pull {MODEL_NAME}")
 
     for i, abc_path in enumerate(abc_files):
         print(f"[{i+1}/{total}] Analyzing: {abc_path.name}")
@@ -614,21 +1134,39 @@ def analyze_corpus(
             progress_callback(i + 1, total, abc_path.name)
 
         try:
-            result = analyze_abc_file(abc_path, client)
+            result = analyze_abc_file(
+                abc_path,
+                client=client,
+                use_transformers=use_transformers,
+                transformers_client=transformers_client
+            )
             save_metrics(result, output_dir)
             results.append(result)
 
             # Brief status
-            print(f"         Perplexity: {result.perplexity.overall:.2f}, "
-                  f"Tokens: {result.token_count}, "
-                  f"High surprisal: {len(result.surprisal.high_surprisal_tokens)}")
+            status_msg = f"         Perplexity: {result.perplexity.overall:.2f}, Tokens: {result.token_count}"
+            if result.attention.mean_entropy is not None:
+                status_msg += f", Attention entropy: {result.attention.mean_entropy:.2f}"
+            status_msg += f", High surprisal: {len(result.surprisal.high_surprisal_tokens)}"
+            print(status_msg)
 
         except Exception as e:
             print(f"         Error: {e}")
             continue
 
-        # Small delay to avoid overwhelming API
-        time.sleep(0.1)
+        # Small delay to avoid overwhelming API (not needed for transformers)
+        if not use_transformers:
+            time.sleep(0.1)
+
+        # Clear cache between files if using transformers to manage memory
+        if use_transformers and torch is not None:
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+    # Cleanup transformers client
+    if transformers_client is not None:
+        transformers_client.unload_model()
 
     return results
 
@@ -679,11 +1217,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    # Analyze a single file
+    # Analyze a single file with Ollama
     python src/model_harness.py data/abc_files/traditional_001.abc
+
+    # Analyze with full attention/hidden state metrics via transformers
+    python src/model_harness.py data/abc_files/traditional_001.abc --use-transformers
 
     # Analyze all files in directory
     python src/model_harness.py --all data/abc_files/
+
+    # Analyze all files with transformers
+    python src/model_harness.py --all data/abc_files/ --use-transformers
 
     # Specify custom output directory
     python src/model_harness.py --all data/abc_files/ --output results/metrics
@@ -710,6 +1254,12 @@ Examples:
         action="store_true",
         help="Print corpus statistics after analysis"
     )
+    parser.add_argument(
+        "--use-transformers", "-t",
+        action="store_true",
+        help="Use transformers library for full attention and hidden state analysis "
+             "(requires more memory but provides complete interpretability metrics)"
+    )
 
     args = parser.parse_args()
 
@@ -718,33 +1268,89 @@ Examples:
         print(f"Error: Path not found: {args.path}")
         sys.exit(1)
 
-    # Check Ollama availability
-    client = OllamaClient()
-    if not client.is_available():
-        print("Warning: Ollama server not available at", OLLAMA_URL)
-        print("Using estimation mode. Start Ollama with: ollama serve")
-    elif not client.is_model_available():
-        print(f"Warning: Model {MODEL_NAME} not available")
-        print(f"Pull model with: ollama pull {MODEL_NAME}")
-    else:
-        print(f"Connected to Ollama, using model: {MODEL_NAME}")
+    # Initialize client based on mode
+    client = None
+    transformers_client = None
+    use_transformers = args.use_transformers
 
-    print()
+    if use_transformers:
+        if not TRANSFORMERS_AVAILABLE:
+            print("Error: transformers and torch are required for --use-transformers.")
+            print("Install with: pip install transformers torch")
+            print("Falling back to Ollama mode.\n")
+            use_transformers = False
+        else:
+            print(f"Using transformers library with model: {TRANSFORMERS_MODEL_NAME}")
+            print("This will provide full attention entropy and hidden state metrics.")
+            print()
+
+    if not use_transformers:
+        # Check Ollama availability
+        client = OllamaClient()
+        if not client.is_available():
+            print("Warning: Ollama server not available at", OLLAMA_URL)
+            print("Using estimation mode. Start Ollama with: ollama serve")
+        elif not client.is_model_available():
+            print(f"Warning: Model {MODEL_NAME} not available")
+            print(f"Pull model with: ollama pull {MODEL_NAME}")
+        else:
+            print(f"Connected to Ollama, using model: {MODEL_NAME}")
+        print()
 
     if args.path.is_file():
         # Single file analysis
-        result = analyze_abc_file(args.path, client)
+        if use_transformers:
+            transformers_client = TransformersClient()
+
+        result = analyze_abc_file(
+            args.path,
+            client=client,
+            use_transformers=use_transformers,
+            transformers_client=transformers_client
+        )
         output_path = save_metrics(result, args.output)
+
         print(f"\nResults for {result.filename}:")
+        print(f"  Model: {result.model}")
         print(f"  Tokens: {result.token_count}")
         print(f"  Perplexity: {result.perplexity.overall:.2f}")
         print(f"  Mean surprisal: {result.surprisal.mean:.2f} bits")
         print(f"  High surprisal tokens: {len(result.surprisal.high_surprisal_tokens)}")
+
+        if result.attention.mean_entropy is not None:
+            print(f"\nAttention Metrics:")
+            print(f"  Mean entropy: {result.attention.mean_entropy:.4f} bits")
+            print(f"  Number of layers: {len(result.attention.per_layer)}")
+            print(f"  High entropy heads: {len(result.attention.high_entropy_heads)}")
+            print(f"  Low entropy heads: {len(result.attention.low_entropy_heads)}")
+
+            # Count head types
+            if result.attention.head_specializations:
+                head_types = {}
+                for spec in result.attention.head_specializations:
+                    ht = spec.get('head_type', 'unknown')
+                    head_types[ht] = head_types.get(ht, 0) + 1
+                print(f"  Head specialization: {head_types}")
+
+        if result.activations.per_layer_l2_norm is not None:
+            print(f"\nActivation Metrics:")
+            print(f"  Embedding L2 norm: {result.activations.embedding_norm:.4f}")
+            print(f"  Final layer L2 norm: {result.activations.final_layer_norm:.4f}")
+            print(f"  Norm growth rate: {result.activations.norm_growth_rate:.6f}")
+
         print(f"\nSaved metrics to: {output_path}")
+
+        # Cleanup
+        if transformers_client is not None:
+            transformers_client.unload_model()
 
     elif args.path.is_dir():
         # Corpus analysis
-        results = analyze_corpus(args.path, args.output)
+        results = analyze_corpus(
+            args.path,
+            args.output,
+            use_transformers=use_transformers
+        )
         print(f"\nAnalyzed {len(results)} files")
         print(f"Metrics saved to: {args.output}")
 
@@ -757,6 +1363,13 @@ Examples:
                   f"std: {stats['perplexity']['std']:.2f}")
             print(f"  Surprisal - mean: {stats['surprisal']['mean']:.2f} bits")
             print(f"  Files with high surprisal tokens: {stats['high_surprisal_files']}")
+
+            # Add attention statistics if available
+            entropies = [r.attention.mean_entropy for r in results
+                        if r.attention.mean_entropy is not None]
+            if entropies:
+                mean_ent = sum(entropies) / len(entropies)
+                print(f"  Mean attention entropy: {mean_ent:.4f} bits")
     else:
         print(f"Error: Path is neither file nor directory: {args.path}")
         sys.exit(1)
