@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@6.1.0"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}, "axis": {"labelFontSize": 11, "titleFontSize": 13}, "title": {"anchor": "start", "fontSize": 16}}, "data": {"name": "data-7d12eaef1c320caa5505d8fa61ba86e7"}, "mark": {"type": "bar"}, "encoding": {"color": {"field": "genre", "legend": {"orient": "right"}, "scale": {"domain": ["traditional", "avantgarde", "experimental", "noise", "terrible", "silence"], "range": ["#4477AA", "#EE6677", "#228833", "#CCBB44", "#66CCEE", "#AA3377"]}, "title": "Genre", "type": "nominal"}, "tooltip": [{"field": "filename", "title": "Piece", "type": "nominal"}, {"field": "genre", "title": "Genre", "type": "nominal"}, {"field": "perplexity", "format": ".2f", "title": "Perplexity", "type": "quantitative"}], "x": {"axis": {"labelAngle": -45}, "field": "filename", "sort": {"field": "perplexity", "order": "descending"}, "title": "Piece", "type": "nominal"}, "y": {"field": "perplexity", "title": "Perplexity", "type": "quantitative"}}, "height": 400, "params": [{"name": "param_1e9efca18e7a2868", "select": {"type": "interval", "encodings": ["x", "y"]}, "bind": "scales"}], "title": "Perplexity Comparison Across Corpus", "width": "container", "$schema": "https://vega.github.io/schema/vega-lite/v6.1.0.json", "datasets": {"data-7d12eaef1c320caa5505d8fa61ba86e7": [{"filename": "avantgarde_001.abc", "genre": "avantgarde", "perplexity": 15.8414, "attention_entropy": 0.0195, "surprisal_mean": 3.9856, "token_count": 186}, {"filename": "avantgarde_002.abc", "genre": "avantgarde", "perplexity": 16.3182, "attention_entropy": 0.0253, "surprisal_mean": 4.0284, "token_count": 146}, {"filename": "avantgarde_003.abc", "genre": "avantgarde", "perplexity": 18.0587, "attention_entropy": 0.0133, "surprisal_mean": 4.1746, "token_count": 269}, {"filename": "avantgarde_004.abc", "genre": "avantgarde", "perplexity": 18.6609, "attention_entropy": 0.0241, "surprisal_mean": 4.2219, "token_count": 152}, {"filename": "avantgarde_005.abc", "genre": "avantgarde", "perplexity": 14.3675, "attention_entropy": 0.0115, "surprisal_mean": 3.8447, "token_count": 312}, {"filename": "experimental_001.abc", "genre": "experimental", "perplexity": 11.7276, "attention_entropy": 0.0049, "surprisal_mean": 3.5518, "token_count": 752}, {"filename": "experimental_002.abc", "genre": "experimental", "perplexity": 12.0117, "attention_entropy": 0.004, "surprisal_mean": 3.5864, "token_count": 909}, {"filename": "experimental_003.abc", "genre": "experimental", "perplexity": 12.3945, "attention_entropy": 0.0048, "surprisal_mean": 3.6316, "token_count": 782}, {"filename": "experimental_004.abc", "genre": "experimental", "perplexity": 12.5475, "attention_entropy": 0.0044, "surprisal_mean": 3.6493, "token_count": 837}, {"filename": "experimental_005.abc", "genre": "experimental", "perplexity": 11.5309, "attention_entropy": 0.007, "surprisal_mean": 3.5274, "token_count": 537}, {"filename": "noise_001.abc", "genre": "noise", "perplexity": 19.1047, "attention_entropy": 0.0091, "surprisal_mean": 4.2559, "token_count": 408}, {"filename": "noise_002.abc", "genre": "noise", "perplexity": 16.4376, "attention_entropy": 0.0074, "surprisal_mean": 4.0389, "token_count": 489}, {"filename": "noise_003.abc", "genre": "noise", "perplexity": 17.4501, "attention_entropy": 0.0091, "surprisal_mean": 4.1252, "token_count": 394}, {"filename": "noise_004.abc", "genre": "noise", "perplexity": 16.753, "attention_entropy": 0.0087, "surprisal_mean": 4.0663, "token_count": 420}, {"filename": "noise_005.abc", "genre": "noise", "perplexity": 21.0985, "attention_entropy": 0.0117, "surprisal_mean": 4.3991, "token_count": 309}, {"filename": "silence_001.abc", "genre": "silence", "perplexity": 4.7763, "attention_entropy": 0.0301, "surprisal_mean": 2.2559, "token_count": 123}, {"filename": "silence_002.abc", "genre": "silence", "perplexity": 4.8234, "attention_entropy": 0.0315, "surprisal_mean": 2.2701, "token_count": 117}, {"filename": "silence_003.abc", "genre": "silence", "perplexity": 4.4367, "attention_entropy": 0.0228, "surprisal_mean": 2.1495, "token_count": 162}, {"filename": "silence_004.abc", "genre": "silence", "perplexity": 5.6117, "attention_entropy": 0.0322, "surprisal_mean": 2.4884, "token_count": 114}, {"filename": "silence_005.abc", "genre": "silence", "perplexity": 3.7241, "attention_entropy": 0.0251, "surprisal_mean": 1.8969, "token_count": 149}, {"filename": "terrible_001.abc", "genre": "terrible", "perplexity": 7.9178, "attention_entropy": 0.0288, "surprisal_mean": 2.9851, "token_count": 125}, {"filename": "terrible_002.abc", "genre": "terrible", "perplexity": 5.0448, "attention_entropy": 0.0212, "surprisal_mean": 2.3348, "token_count": 159}, {"filename": "terrible_003.abc", "genre": "terrible", "perplexity": 4.5811, "attention_entropy": 0.0222, "surprisal_mean": 2.1957, "token_count": 153}, {"filename": "terrible_004.abc", "genre": "terrible", "perplexity": 5.6556, "attention_entropy": 0.027, "surprisal_mean": 2.4997, "token_count": 131}, {"filename": "terrible_005.abc", "genre": "terrible", "perplexity": 5.2597, "attention_entropy": 0.0232, "surprisal_mean": 2.395, "token_count": 152}, {"filename": "traditional_001.abc", "genre": "traditional", "perplexity": 10.4664, "attention_entropy": 0.0208, "surprisal_mean": 3.3877, "token_count": 164}, {"filename": "traditional_002.abc", "genre": "traditional", "perplexity": 5.2557, "attention_entropy": 0.0136, "surprisal_mean": 2.3939, "token_count": 251}, {"filename": "traditional_003.abc", "genre": "traditional", "perplexity": 4.5214, "attention_entropy": 0.0148, "surprisal_mean": 2.1768, "token_count": 226}, {"filename": "traditional_004.abc", "genre": "traditional", "perplexity": 2.2877, "attention_entropy": 0.0191, "surprisal_mean": 1.1939, "token_count": 192}, {"filename": "traditional_005.abc", "genre": "traditional", "perplexity": 8.1739, "attention_entropy": 0.0177, "surprisal_mean": 3.031, "token_count": 187}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>

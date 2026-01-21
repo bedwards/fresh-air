@@ -1,0 +1,130 @@
+{
+  "corpus": [
+    "perplexity_comparison.html",
+    "genre_clustering.html",
+    "perplexity_distribution.html",
+    "entropy_distribution.html"
+  ],
+  "pieces": {
+    "avantgarde_001": [
+      "surprisal",
+      "attention"
+    ],
+    "avantgarde_002": [
+      "surprisal",
+      "attention"
+    ],
+    "avantgarde_003": [
+      "surprisal",
+      "attention"
+    ],
+    "avantgarde_004": [
+      "surprisal",
+      "attention"
+    ],
+    "avantgarde_005": [
+      "surprisal",
+      "attention"
+    ],
+    "experimental_001": [
+      "surprisal",
+      "attention"
+    ],
+    "experimental_002": [
+      "surprisal",
+      "attention"
+    ],
+    "experimental_003": [
+      "surprisal",
+      "attention"
+    ],
+    "experimental_004": [
+      "surprisal",
+      "attention"
+    ],
+    "experimental_005": [
+      "surprisal",
+      "attention"
+    ],
+    "noise_001": [
+      "surprisal",
+      "attention"
+    ],
+    "noise_002": [
+      "surprisal",
+      "attention"
+    ],
+    "noise_003": [
+      "surprisal",
+      "attention"
+    ],
+    "noise_004": [
+      "surprisal",
+      "attention"
+    ],
+    "noise_005": [
+      "surprisal",
+      "attention"
+    ],
+    "silence_001": [
+      "surprisal",
+      "attention"
+    ],
+    "silence_002": [
+      "surprisal",
+      "attention"
+    ],
+    "silence_003": [
+      "surprisal",
+      "attention"
+    ],
+    "silence_004": [
+      "surprisal",
+      "attention"
+    ],
+    "silence_005": [
+      "surprisal",
+      "attention"
+    ],
+    "terrible_001": [
+      "surprisal",
+      "attention"
+    ],
+    "terrible_002": [
+      "surprisal",
+      "attention"
+    ],
+    "terrible_003": [
+      "surprisal",
+      "attention"
+    ],
+    "terrible_004": [
+      "surprisal",
+      "attention"
+    ],
+    "terrible_005": [
+      "surprisal",
+      "attention"
+    ],
+    "traditional_001": [
+      "surprisal",
+      "attention"
+    ],
+    "traditional_002": [
+      "surprisal",
+      "attention"
+    ],
+    "traditional_003": [
+      "surprisal",
+      "attention"
+    ],
+    "traditional_004": [
+      "surprisal",
+      "attention"
+    ],
+    "traditional_005": [
+      "surprisal",
+      "attention"
+    ]
+  }
+}
